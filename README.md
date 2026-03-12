@@ -21,3 +21,5 @@ Modal Find is a VS Code extension prototype that remaps `Cmd+Shift+F` / `Ctrl+Sh
 npm install
 npm run compile
 ```
+
+`npm run compile` now builds both the TypeScript extension and the bundled Rust `fff` sidecar for the current platform. For iterative frontend work, `npm run watch` still only recompiles the TypeScript sources; if you change the Rust bridge, rerun `npm run build:native`.

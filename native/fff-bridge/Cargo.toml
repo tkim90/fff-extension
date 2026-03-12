@@ -1,0 +1,11 @@
+[package]
+name = "fff-bridge"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[dependencies]
+anyhow = "1.0"
+fff-core = { git = "https://github.com/dmtrKovalenko/fff.nvim", package = "fff-core", rev = "1e50f8df80ac973a8f667f672c7d6fdc453df021" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

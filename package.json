@@ -30,7 +30,9 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "build:native": "node ./scripts/build-native.mjs",
+    "compile:ts": "tsc -p ./",
+    "compile": "npm run compile:ts && npm run build:native",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",

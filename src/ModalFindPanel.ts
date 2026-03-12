@@ -53,11 +53,14 @@ export class ModalFindPanel implements vscode.Disposable {
 
 	private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
 		this.panel = panel;
-		this.searchService = new SearchService();
+		this.searchService = new SearchService(extensionUri);
 		this.panel.webview.html = this.getHtmlForWebview(extensionUri, this.panel.webview);
 
 		this.disposables.push(
 			this.searchService,
+			this.searchService.onDidChange(() => {
+				void this.runSearch(this.lastQuery);
+			}),
 			this.panel.onDidDispose(() => this.dispose()),
 			this.panel.webview.onDidReceiveMessage((message: WebviewMessage) => {
 				void this.handleMessage(message);
@@ -316,7 +319,8 @@ export class ModalFindPanel implements vscode.Disposable {
 		.result-title {
 			font-size: 14px;
 			font-weight: 600;
-			word-break: break-word;
+			word-break: normal;
+			overflow-wrap: anywhere;
 		}
 
 		.result-subtitle {
@@ -610,6 +614,7 @@ export class ModalFindPanel implements vscode.Disposable {
 					statusRoot.textContent = message.query ? 'Searching…' : 'Loading index…';
 					return;
 				case 'results':
+					currentQuery = message.query;
 					results = message.results;
 					selectedIndex = 0;
 					metaRoot.textContent = message.meta.searchableFileCount + ' searchable / ' + message.meta.indexedFileCount + ' indexed / ' + message.meta.skippedFileCount + ' path-only';
