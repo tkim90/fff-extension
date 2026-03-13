@@ -1,0 +1,254 @@
+:root {
+	color-scheme: light dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	background: #111111;
+	color: #e6e6e6;
+	font-family: var(--vscode-font-family);
+}
+
+body {
+	padding: 18px;
+}
+
+.shell {
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.modal {
+	width: min(1120px, 96vw);
+	height: min(760px, 92vh);
+	display: grid;
+	grid-template-rows: auto minmax(220px, 1fr) minmax(180px, 0.8fr) auto;
+	background: #171717;
+	border: 1px solid #2b2b2b;
+	border-radius: 0;
+	box-shadow: none;
+	overflow: hidden;
+}
+
+.header {
+	padding: 18px 18px 14px;
+	border-bottom: 1px solid #2b2b2b;
+	background: #171717;
+}
+
+.input-row {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 12px;
+	align-items: center;
+}
+
+.input-actions {
+	display: flex;
+	align-items: center;
+	gap: 0;
+}
+
+.query {
+	width: 100%;
+	border: 1px solid #313131;
+	background: #111111;
+	color: #f2f2f2;
+	padding: 2px 2px;
+	border-radius: 0;
+	font-size: 16px;
+	outline: none;
+}
+
+.query:focus {
+	border-color: var(--vscode-focusBorder);
+	box-shadow: 0 0 0 1px var(--vscode-focusBorder);
+}
+
+.toolbar-button {
+	width: 42px;
+	height: 42px;
+	border: 1px solid #3a3a3a;
+	border-radius: 0;
+	background: #111111;
+	color: #9f9f9f;
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	cursor: pointer;
+	transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.toolbar-button:hover {
+	background: #1b1b1b;
+	color: #d8d8d8;
+}
+
+.toolbar-button.is-active {
+	background: #202734;
+	border-color: #4b6a96;
+	color: #d7e7ff;
+}
+
+.toolbar-button:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 1px var(--vscode-focusBorder);
+	border-color: var(--vscode-focusBorder);
+}
+
+.results {
+	overflow: auto;
+	padding: 8px;
+	background: #171717;
+}
+
+.result {
+	width: 100%;
+	border: 1px solid transparent;
+	border-radius: 0;
+	background: transparent;
+	color: inherit;
+	padding: 2px 2px;
+	text-align: left;
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	gap: 14px;
+	align-items: center;
+	cursor: pointer;
+}
+
+.result:focus {
+	outline: none;
+}
+
+.result:hover {
+	background: #1f1f1f;
+}
+
+.result.is-selected {
+	background: #232323;
+	border-color: #3a3a3a;
+}
+
+.badge {
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	padding: 6px 8px;
+	border-radius: 0;
+	background: rgba(53, 53, 53, 0.55);
+	color: #cfcfcf;
+	border: 1px solid rgba(110, 110, 110, 0.35);
+}
+
+.badge.is-line {
+	background: rgba(34, 58, 94, 0.58);
+	color: #bfd6ff;
+	border-color: rgba(77, 117, 187, 0.4);
+}
+
+.badge.is-file {
+	background: rgba(34, 74, 52, 0.58);
+	color: #c7efd2;
+	border-color: rgba(89, 157, 115, 0.4);
+}
+
+.result-main {
+	min-width: 0;
+}
+
+.result-title {
+	font-size: 14px;
+	font-weight: 500;
+	word-break: normal;
+	overflow-wrap: anywhere;
+	white-space: pre-wrap;
+}
+
+.result-title.is-file {
+	color: #d9d9d9;
+	font-weight: 600;
+}
+
+.result-pos {
+	font-size: 12px;
+	color: #9d9d9d;
+	white-space: nowrap;
+	text-align: right;
+	align-self: center;
+}
+
+.preview {
+	border-top: 1px solid #2b2b2b;
+	padding: 14px 18px 18px;
+	overflow: auto;
+	background: #111111;
+	font-family: var(--vscode-editor-font-family, var(--vscode-font-family));
+	font-size: 13px;
+	line-height: 1.6;
+}
+
+.preview-header {
+	display: flex;
+	justify-content: space-between;
+	gap: 16px;
+	align-items: center;
+	margin-bottom: 10px;
+	color: #8d8d8d;
+	font-size: 12px;
+}
+
+.code {
+	display: grid;
+	gap: 2px;
+}
+
+.code-line {
+	display: grid;
+	grid-template-columns: 56px 1fr;
+	gap: 14px;
+	padding: 2px 10px;
+	border-radius: 0;
+	white-space: pre;
+	overflow-x: auto;
+}
+
+.code-line.is-match {
+	background: #1f1f1f;
+}
+
+.line-number {
+	text-align: right;
+	color: #6d6d6d;
+	user-select: none;
+}
+
+.footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 12px 18px 16px;
+	border-top: 1px solid #2b2b2b;
+	color: #8d8d8d;
+	font-size: 12px;
+	background: #171717;
+}
+
+.empty {
+	height: 100%;
+	display: grid;
+	place-items: center;
+	color: #8d8d8d;
+	font-size: 13px;
+	text-align: center;
+	padding: 24px;
+}

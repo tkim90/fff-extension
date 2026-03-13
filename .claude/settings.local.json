@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "mcp__fff__grep"
+      "mcp__fff__grep",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Read(//usr/local/bin/**)",
+      "Read(//opt/homebrew/Cellar/node/25.2.1/bin/**)",
+      "Read(//Users/taekim/.nvm/versions/node/**)",
+      "Bash(/Users/taekim/.nvm/versions/node/v25.3.0/bin/npx tsc:*)"
     ]
   }
 }
