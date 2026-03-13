@@ -149,6 +149,13 @@
 		vscode.postMessage({ type: 'openResult', resultId: selected.id });
 	}
 
+	function focusSelectedButton() {
+		const el = resultsRoot.querySelector('[data-index="' + selectedIndex + '"]');
+		if (el) {
+			el.focus();
+		}
+	}
+
 	queryInput.addEventListener('input', () => {
 		scheduleQuery(queryInput.value);
 	});
@@ -197,28 +204,27 @@
 		if (event.key === 'Escape') {
 			event.preventDefault();
 			vscode.postMessage({ type: 'close' });
+			return;
 		}
-	});
-
-	resultsRoot.addEventListener('keydown', (event) => {
+		if (document.activeElement === queryInput) {
+			return;
+		}
 		if (event.key === 'ArrowDown') {
 			event.preventDefault();
 			moveSelection(1);
+			focusSelectedButton();
 			return;
 		}
 		if (event.key === 'ArrowUp') {
 			event.preventDefault();
 			moveSelection(-1);
+			focusSelectedButton();
 			return;
 		}
 		if (event.key === 'Enter') {
 			event.preventDefault();
 			openSelected();
 			return;
-		}
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			vscode.postMessage({ type: 'close' });
 		}
 	});
 

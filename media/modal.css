@@ -108,6 +108,7 @@ body {
 	overflow: auto;
 	padding: 8px;
 	background: #171717;
+	outline: none;
 }
 
 .result {
