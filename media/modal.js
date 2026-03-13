@@ -10,6 +10,7 @@
 	const caseToggle = document.getElementById('case-toggle');
 	const regexToggle = document.getElementById('regex-toggle');
 	const modalRoot = document.querySelector('.modal');
+	const splitter = document.getElementById('splitter');
 
 	let results = [];
 	let selectedIndex = 0;
@@ -19,6 +20,7 @@
 	let debounceTimer;
 	let modalWidth = 0;
 	let modalHeight = 0;
+	let splitRatio = 0;
 
 	const savedState = vscode.getState();
 	if (savedState?.query) {
@@ -36,6 +38,11 @@
 		modalHeight = savedState.modalHeight;
 		modalRoot.style.width = modalWidth + 'px';
 		modalRoot.style.height = modalHeight + 'px';
+	}
+	if (savedState?.splitRatio) {
+		splitRatio = savedState.splitRatio;
+		const r = Math.max(0.1, Math.min(0.9, splitRatio));
+		modalRoot.style.gridTemplateRows = 'auto ' + r + 'fr 5px ' + (1 - r) + 'fr auto';
 	}
 
 	function escapeHtml(value) {
@@ -151,7 +158,16 @@
 			state.modalWidth = modalWidth;
 			state.modalHeight = modalHeight;
 		}
+		if (splitRatio) {
+			state.splitRatio = splitRatio;
+		}
 		vscode.setState(state);
+	}
+
+	function applySplitRatio(ratio) {
+		splitRatio = ratio;
+		const r = Math.max(0.1, Math.min(0.9, ratio));
+		modalRoot.style.gridTemplateRows = 'auto ' + r + 'fr 5px ' + (1 - r) + 'fr auto';
 	}
 
 	function updateCaseToggle() {
@@ -411,10 +427,15 @@
 				renderAll();
 				return;
 			case 'restoreDimensions':
-				modalWidth = message.width;
-				modalHeight = message.height;
-				modalRoot.style.width = modalWidth + 'px';
-				modalRoot.style.height = modalHeight + 'px';
+				if (message.width && message.height) {
+					modalWidth = message.width;
+					modalHeight = message.height;
+					modalRoot.style.width = modalWidth + 'px';
+					modalRoot.style.height = modalHeight + 'px';
+				}
+				if (message.splitRatio) {
+					applySplitRatio(message.splitRatio);
+				}
 				syncState();
 				return;
 		}
@@ -490,6 +511,60 @@
 			active = null;
 			syncState();
 			vscode.postMessage({ type: 'resizeDimensionsChanged', width: modalWidth, height: modalHeight });
+		});
+	})();
+
+	// Splitter drag to resize results vs preview
+	(function initSplitter() {
+		let active = null;
+		let rafId = 0;
+
+		splitter.addEventListener('mousedown', (event) => {
+			event.preventDefault();
+			const resultsRect = resultsRoot.getBoundingClientRect();
+			const previewRect = previewRoot.getBoundingClientRect();
+			active = {
+				startY: event.clientY,
+				startResultsH: resultsRect.height,
+				startPreviewH: previewRect.height
+			};
+		});
+
+		document.addEventListener('mousemove', (event) => {
+			if (!active) {
+				return;
+			}
+			event.preventDefault();
+
+			const cy = event.clientY;
+
+			if (rafId) {
+				return;
+			}
+			rafId = requestAnimationFrame(() => {
+				rafId = 0;
+				if (!active) {
+					return;
+				}
+				const dy = cy - active.startY;
+				const totalH = active.startResultsH + active.startPreviewH;
+				const newResultsH = Math.max(80, Math.min(totalH - 80, active.startResultsH + dy));
+				const ratio = newResultsH / totalH;
+				applySplitRatio(ratio);
+			});
+		});
+
+		document.addEventListener('mouseup', () => {
+			if (!active) {
+				return;
+			}
+			if (rafId) {
+				cancelAnimationFrame(rafId);
+				rafId = 0;
+			}
+			active = null;
+			syncState();
+			vscode.postMessage({ type: 'splitRatioChanged', ratio: splitRatio });
 		});
 	})();
 

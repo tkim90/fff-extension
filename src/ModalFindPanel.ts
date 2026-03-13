@@ -8,7 +8,8 @@ type WebviewMessage =
 	| { type: 'close' }
 	| { type: 'queryChanged'; value: string; caseSensitive: boolean; regexEnabled: boolean }
 	| { type: 'openResult'; resultId: string }
-	| { type: 'resizeDimensionsChanged'; width: number; height: number };
+	| { type: 'resizeDimensionsChanged'; width: number; height: number }
+	| { type: 'splitRatioChanged'; ratio: number };
 
 interface SerializedSearchResult {
 	id: string;
@@ -115,8 +116,14 @@ export class ModalFindPanel implements vscode.Disposable {
 				this.lastCaseSensitive = message.caseSensitive ?? this.lastCaseSensitive;
 				this.lastRegexEnabled = message.regexEnabled ?? this.lastRegexEnabled;
 				const dims = this.context.globalState.get<{ width: number; height: number }>('modalDimensions');
-				if (dims) {
-					this.postMessage({ type: 'restoreDimensions', width: dims.width, height: dims.height });
+				const splitRatio = this.context.globalState.get<number>('modalSplitRatio');
+				if (dims || splitRatio !== undefined) {
+					this.postMessage({
+						type: 'restoreDimensions',
+						width: dims?.width,
+						height: dims?.height,
+						splitRatio
+					});
 				}
 				await this.runSearch(
 					this.lastQuery,
@@ -146,6 +153,9 @@ export class ModalFindPanel implements vscode.Disposable {
 					width: message.width,
 					height: message.height
 				});
+				return;
+			case 'splitRatioChanged':
+				void this.context.globalState.update('modalSplitRatio', message.ratio);
 				return;
 		}
 	}
@@ -301,6 +311,7 @@ export class ModalFindPanel implements vscode.Disposable {
 				</div>
 			</div>
 			<div id="results" class="results" tabindex="0"></div>
+			<div id="splitter" class="splitter"></div>
 			<div id="preview" class="preview" tabindex="0"></div>
 			<div id="footer" class="footer">
 				<div id="meta">Indexing workspace\u2026</div>
