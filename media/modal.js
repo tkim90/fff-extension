@@ -416,6 +416,7 @@
 	// Corner resize handles
 	(function initResize() {
 		let active = null;
+		let rafId = 0;
 
 		document.addEventListener('mousedown', (event) => {
 			const handle = event.target.closest('[data-resize]');
@@ -438,26 +439,43 @@
 				return;
 			}
 			event.preventDefault();
-			const dx = event.clientX - active.startX;
-			const dy = event.clientY - active.startY;
-			let newW = active.startW;
-			let newH = active.startH;
 
-			if (active.corner === 'se') { newW += dx; newH += dy; }
-			else if (active.corner === 'sw') { newW -= dx; newH += dy; }
-			else if (active.corner === 'ne') { newW += dx; newH -= dy; }
-			else if (active.corner === 'nw') { newW -= dx; newH -= dy; }
+			const cx = event.clientX;
+			const cy = event.clientY;
 
-			newW = Math.max(480, Math.min(newW, window.innerWidth * 0.96));
-			newH = Math.max(400, Math.min(newH, window.innerHeight * 0.92));
+			if (rafId) {
+				return;
+			}
+			rafId = requestAnimationFrame(() => {
+				rafId = 0;
+				if (!active) {
+					return;
+				}
+				const dx = cx - active.startX;
+				const dy = cy - active.startY;
+				let newW = active.startW;
+				let newH = active.startH;
 
-			modalRoot.style.width = newW + 'px';
-			modalRoot.style.height = newH + 'px';
+				if (active.corner === 'se') { newW += dx; newH += dy; }
+				else if (active.corner === 'sw') { newW -= dx; newH += dy; }
+				else if (active.corner === 'ne') { newW += dx; newH -= dy; }
+				else if (active.corner === 'nw') { newW -= dx; newH -= dy; }
+
+				newW = Math.max(480, Math.min(newW, window.innerWidth * 0.96));
+				newH = Math.max(400, Math.min(newH, window.innerHeight * 0.92));
+
+				modalRoot.style.width = newW + 'px';
+				modalRoot.style.height = newH + 'px';
+			});
 		});
 
 		document.addEventListener('mouseup', () => {
 			if (!active) {
 				return;
+			}
+			if (rafId) {
+				cancelAnimationFrame(rafId);
+				rafId = 0;
 			}
 			const rect = modalRoot.getBoundingClientRect();
 			modalWidth = Math.round(rect.width);
