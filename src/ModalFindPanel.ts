@@ -257,6 +257,7 @@ export class ModalFindPanel implements vscode.Disposable {
 		const nonce = getNonce();
 		const cspSource = webview.cspSource;
 		const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'media', 'modal.css'));
+		const highlightJsUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'media', 'highlight.min.js'));
 		const jsUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'media', 'modal.js'));
 
 		return `<!DOCTYPE html>
@@ -288,6 +289,7 @@ export class ModalFindPanel implements vscode.Disposable {
 			</div>
 		</div>
 	</div>
+	<script nonce="${nonce}" src="${highlightJsUri}"></script>
 	<script nonce="${nonce}" src="${jsUri}"></script>
 </body>
 </html>`;

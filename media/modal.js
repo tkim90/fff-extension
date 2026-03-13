@@ -45,9 +45,40 @@
 		return text.slice(0, limit) + '\u2026';
 	}
 
-	function highlightText(text) {
-		if (!currentQuery) {
+	const EXT_TO_LANG = {
+		js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
+		ts: 'typescript', tsx: 'typescript', mts: 'typescript', cts: 'typescript',
+		py: 'python', rb: 'ruby', rs: 'rust', go: 'go',
+		java: 'java', kt: 'kotlin', cs: 'csharp', cpp: 'cpp', cc: 'cpp', c: 'c', h: 'c',
+		swift: 'swift', m: 'objectivec',
+		css: 'css', scss: 'scss', less: 'less',
+		html: 'xml', htm: 'xml', xml: 'xml', svg: 'xml',
+		json: 'json', yaml: 'yaml', yml: 'yaml', toml: 'ini',
+		md: 'markdown', sh: 'bash', bash: 'bash', zsh: 'bash',
+		sql: 'sql', r: 'r', php: 'php', pl: 'perl',
+		lua: 'lua', diff: 'diff',
+		graphql: 'graphql', gql: 'graphql',
+	};
+
+	function detectLanguage(relativePath) {
+		const ext = relativePath.split('.').pop()?.toLowerCase();
+		return ext ? EXT_TO_LANG[ext] : undefined;
+	}
+
+	function syntaxHighlight(text, language) {
+		if (!language || typeof hljs === 'undefined') {
 			return escapeHtml(text);
+		}
+		try {
+			return hljs.highlight(text, { language, ignoreIllegals: true }).value;
+		} catch {
+			return escapeHtml(text);
+		}
+	}
+
+	function addSearchMarks(container) {
+		if (!currentQuery) {
+			return;
 		}
 
 		let pattern;
@@ -58,28 +89,51 @@
 			const flags = caseSensitive ? 'g' : 'gi';
 			pattern = new RegExp(source, flags);
 		} catch {
-			return escapeHtml(text);
+			return;
 		}
 
-		const parts = [];
-		let lastIndex = 0;
-		let match;
-		while ((match = pattern.exec(text)) !== null) {
-			if (match[0].length === 0) {
-				pattern.lastIndex++;
+		const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+		const textNodes = [];
+		while (walker.nextNode()) {
+			textNodes.push(walker.currentNode);
+		}
+
+		for (const node of textNodes) {
+			const text = node.textContent;
+			if (!text) {
 				continue;
 			}
-			if (match.index > lastIndex) {
-				parts.push(escapeHtml(text.slice(lastIndex, match.index)));
-			}
-			parts.push('<mark>' + escapeHtml(match[0]) + '</mark>');
-			lastIndex = pattern.lastIndex;
-		}
-		if (lastIndex < text.length) {
-			parts.push(escapeHtml(text.slice(lastIndex)));
-		}
 
-		return parts.length ? parts.join('') : escapeHtml(text);
+			pattern.lastIndex = 0;
+			const matches = [];
+			let m;
+			while ((m = pattern.exec(text)) !== null) {
+				if (m[0].length === 0) {
+					pattern.lastIndex++;
+					continue;
+				}
+				matches.push({ start: m.index, end: pattern.lastIndex });
+			}
+			if (!matches.length) {
+				continue;
+			}
+
+			const frag = document.createDocumentFragment();
+			let lastIdx = 0;
+			for (const match of matches) {
+				if (match.start > lastIdx) {
+					frag.appendChild(document.createTextNode(text.slice(lastIdx, match.start)));
+				}
+				const mark = document.createElement('mark');
+				mark.textContent = text.slice(match.start, match.end);
+				frag.appendChild(mark);
+				lastIdx = match.end;
+			}
+			if (lastIdx < text.length) {
+				frag.appendChild(document.createTextNode(text.slice(lastIdx)));
+			}
+			node.parentNode.replaceChild(frag, node);
+		}
 	}
 
 	function syncState() {
@@ -117,16 +171,22 @@
 			const selectedClass = index === selectedIndex ? 'is-selected' : '';
 			const badgeClass = result.kind === 'line' ? 'is-line' : 'is-file';
 			const titleClass = result.kind === 'line' ? 'is-line' : 'is-file';
+			const displayText = truncate(result.displayText, 120);
+			const titleHtml = result.kind === 'line'
+				? syntaxHighlight(displayText, detectLanguage(result.relativePath))
+				: escapeHtml(displayText);
 			return `
 				<button class="result ${selectedClass}" data-result-id="${escapeHtml(result.id)}" data-index="${index}">
 					<div class="badge ${badgeClass}">${escapeHtml(result.kind)}</div>
 					<div class="result-main">
-						<div class="result-title ${titleClass}">${highlightText(truncate(result.displayText, 120))}</div>
+						<div class="result-title ${titleClass}">${titleHtml}</div>
 					</div>
 					<div class="result-pos">${escapeHtml(result.metaText)}</div>
 				</button>
 			`;
 		}).join('');
+
+		resultsRoot.querySelectorAll('.result-title').forEach(addSearchMarks);
 	}
 
 	function renderPreview() {
@@ -136,10 +196,11 @@
 			return;
 		}
 
+		const language = detectLanguage(selected.relativePath);
 		const previewLines = selected.preview.map((line) => `
 			<div class="code-line ${line.isMatch ? 'is-match' : ''}">
 				<div class="line-number">${line.lineNumber}</div>
-				<div>${line.isMatch ? highlightText(line.text || ' ') : escapeHtml(line.text || ' ')}</div>
+				<div class="code-text">${syntaxHighlight(line.text || ' ', language)}</div>
 			</div>
 		`).join('');
 
@@ -150,6 +211,8 @@
 			</div>
 			<div class="code">${previewLines}</div>
 		`;
+
+		previewRoot.querySelectorAll('.code-line.is-match > .code-text').forEach(addSearchMarks);
 	}
 
 	function renderAll() {
