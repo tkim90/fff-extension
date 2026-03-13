@@ -207,7 +207,7 @@
 		previewRoot.innerHTML = `
 			<div class="preview-header">
 				<div>${escapeHtml(selected.relativePath)}</div>
-				<div>${escapeHtml(selected.kind === 'line' ? selected.lineNumber + ':' + selected.column : 'file preview')}</div>
+				<div>${escapeHtml(selected.kind === 'line' ? selected.lineNumber + ':' + selected.column : '')}</div>
 			</div>
 			<div class="code">${previewLines}</div>
 		`;
