@@ -181,10 +181,15 @@ impl App {
             });
 
             if !query_trimmed.is_empty() {
-                let grep_query = parse_grep_query(query);
+                let grep_query_str = if case_sensitive {
+                    query.to_string()
+                } else {
+                    query.to_lowercase()
+                };
+                let grep_query = parse_grep_query(&grep_query_str);
                 let grep_results = grep_search(
                     files,
-                    query,
+                    &grep_query_str,
                     grep_query.as_ref(),
                     &grep_options(limit, case_sensitive, regex_enabled),
                 );
