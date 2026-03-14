@@ -64,7 +64,7 @@ export class ModalFindPanel implements vscode.Disposable {
 			panelId
 		});
 		const panel = vscode.window.createWebviewPanel(
-			'modal-find.search',
+			'fast-fuzzy-finder.search',
 			'Find',
 			{
 				viewColumn: vscode.ViewColumn.Active,

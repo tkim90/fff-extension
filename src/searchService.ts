@@ -55,7 +55,7 @@ export class SearchService implements vscode.Disposable {
 		}
 
 		if (!vscode.workspace.workspaceFolders?.length) {
-			throw new Error('Open a folder or workspace before using Modal Find.');
+			throw new Error('Open a folder or workspace before using Fast Fuzzy Finder.');
 		}
 
 		const startedAt = Date.now();
@@ -160,7 +160,7 @@ export class SearchService implements vscode.Disposable {
 		}
 
 		if (!vscode.workspace.workspaceFolders?.length) {
-			throw new Error('Open a folder or workspace before using Modal Find.');
+			throw new Error('Open a folder or workspace before using Fast Fuzzy Finder.');
 		}
 		const workspaceFolders = vscode.workspace.workspaceFolders;
 

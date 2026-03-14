@@ -18,7 +18,8 @@
       "Bash(unzip -l /Users/taekim/Documents/projects/sideprojects/modal-find/modal-find-0.0.1.vsix)",
       "Bash(sort -k1 -n -r)",
       "Bash(strip -x -o /dev/null dist/native/darwin-arm64/fff-bridge)",
-      "Bash(nm dist/native/darwin-arm64/fff-bridge)"
+      "Bash(nm dist/native/darwin-arm64/fff-bridge)",
+      "Bash(sips -g all /Users/taekim/Documents/projects/sideprojects/modal-find/icon.png)"
     ]
   }
 }

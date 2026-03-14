@@ -33,7 +33,7 @@ export function getHtmlForWebview(extensionUri: vscode.Uri, webview: vscode.Webv
 	<meta charset="UTF-8" />
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} https: data:; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Modal Find</title>
+	<title>Fast Fuzzy Finder</title>
 	<style nonce="${nonce}">${assets.css}</style>
 </head>
 <body data-highlight-src="${highlightJsUri}" data-script-nonce="${nonce}">

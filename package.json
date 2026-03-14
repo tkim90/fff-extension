@@ -1,13 +1,13 @@
 {
-  "name": "modal-find",
-  "displayName": "Modal Find",
+  "name": "fast-fuzzy-finder",
+  "displayName": "Fast Fuzzy Finder",
   "description": "Global fuzzy search in a WebStorm-style modal for VS Code",
   "version": "0.0.1",
   "publisher": "TaeKim",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tkim90/modal-find"
+    "url": "https://github.com/tkim90/fff-extension"
   },
   "engines": {
     "vscode": "^1.105.0"
@@ -23,31 +23,31 @@
   "contributes": {
     "commands": [
       {
-        "command": "modal-find.open",
-        "title": "Modal Find: Open Search"
+        "command": "fast-fuzzy-finder.open",
+        "title": "Fast Fuzzy Finder: Open Search"
       }
     ],
     "keybindings": [
       {
-        "command": "modal-find.open",
+        "command": "fast-fuzzy-finder.open",
         "key": "ctrl+shift+f",
         "mac": "cmd+shift+f"
       }
     ],
     "configuration": {
-      "title": "Modal Find",
+      "title": "Fast Fuzzy Finder",
       "properties": {
-        "modal-find.debug.traceLifecycle": {
+        "fast-fuzzy-finder.debug.traceLifecycle": {
           "type": "boolean",
           "default": false,
-          "description": "Write Modal Find webview, panel, and sidecar lifecycle timings to the Modal Find Trace output channel."
+          "description": "Write Fast Fuzzy Finder webview, panel, and sidecar lifecycle timings to the Fast Fuzzy Finder Trace output channel."
         },
-        "modal-find.debug.disableWarmup": {
+        "fast-fuzzy-finder.debug.disableWarmup": {
           "type": "boolean",
           "default": false,
           "description": "Disable search sidecar warmup so first-open timing can be compared against the default behavior."
         },
-        "modal-find.debug.disposeOnClose": {
+        "fast-fuzzy-finder.debug.disposeOnClose": {
           "type": "boolean",
           "default": false,
           "description": "Dispose the panel on Escape instead of retaining the hidden webview for reopen timing comparisons."

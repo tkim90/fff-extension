@@ -17,9 +17,9 @@ export function activate(context: vscode.ExtensionContext): void {
 		void searchService.warmup('activate');
 	}
 
-	const openCommand = vscode.commands.registerCommand('modal-find.open', () => {
+	const openCommand = vscode.commands.registerCommand('fast-fuzzy-finder.open', () => {
 		traceLifecycle('command.invoked', {
-			command: 'modal-find.open'
+			command: 'fast-fuzzy-finder.open'
 		});
 		ModalFindPanel.createOrShow(context, searchService);
 	});

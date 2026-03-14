@@ -252,7 +252,7 @@ export class FffProcess implements vscode.Disposable {
 			const text = typeof chunk === 'string' ? chunk : chunk.toString('utf8');
 			const message = text.trim();
 			if (message) {
-				console.error(`[modal-find/native] ${message}`);
+				console.error(`[fast-fuzzy-finder/native] ${message}`);
 			}
 		});
 
@@ -286,7 +286,7 @@ export class FffProcess implements vscode.Disposable {
 		try {
 			response = JSON.parse(line) as FffResponse;
 		} catch (error) {
-			console.error(`[modal-find/native] Invalid JSON response: ${line}`);
+			console.error(`[fast-fuzzy-finder/native] Invalid JSON response: ${line}`);
 			console.error(error);
 			return;
 		}
@@ -304,7 +304,7 @@ export class FffProcess implements vscode.Disposable {
 				return;
 			}
 
-			console.error(`[modal-find/native] ${response.message}`);
+			console.error(`[fast-fuzzy-finder/native] ${response.message}`);
 			return;
 		}
 

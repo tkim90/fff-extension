@@ -11,7 +11,7 @@ const TRACE_ORIGIN_MS = performance.now();
 let traceChannel: vscode.OutputChannel | undefined;
 
 export function getDebugOptions(): DebugOptions {
-	const config = vscode.workspace.getConfiguration('modal-find.debug');
+	const config = vscode.workspace.getConfiguration('fast-fuzzy-finder.debug');
 	return {
 		traceLifecycle: config.get<boolean>('traceLifecycle', false),
 		disableWarmup: config.get<boolean>('disableWarmup', false),
@@ -37,7 +37,7 @@ export function disposeDebugResources(): void {
 
 function getTraceChannel(): vscode.OutputChannel {
 	if (!traceChannel) {
-		traceChannel = vscode.window.createOutputChannel('Modal Find Trace');
+		traceChannel = vscode.window.createOutputChannel('Fast Fuzzy Finder Trace');
 	}
 	return traceChannel;
 }
