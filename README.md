@@ -1,8 +1,35 @@
-# Fast Fuzzy Finder
+<h1 align="center">
+  <img src="https://raw.githubusercontent.com/tkim90/fff-extension/main/icon.png" width="64" alt="Fast Fuzzy Finder icon" /><br/>
+  Fast Fuzzy Finder
+</h1>
 
-Fast Fuzzy Finder is a VS Code extension prototype that remaps `Cmd+Shift+F` / `Ctrl+Shift+F` to a workspace-wide fuzzy search surface inspired by WebStorm's 
+<p align="center">
+  <strong>Sub-10ms fuzzy search popup for VS Code</strong><br/>
+  Powered by <a href="https://github.com/dmtrKovalenko/fff.nvim">fff.nvim</a> · Inspired by JetBrains Search Everywhere
+</p>
 
-<img alt="Fast Fuzzy Finder screenshot" src="hero.png" />
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=TaeKim.fast-fuzzy-finder">
+    <img src="https://img.shields.io/visual-studio-marketplace/v/TaeKim.fast-fuzzy-finder?style=flat-square&label=VS%20Marketplace&color=7c3aed" alt="VS Marketplace"/>
+  </a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=TaeKim.fast-fuzzy-finder">
+    <img src="https://img.shields.io/visual-studio-marketplace/d/TaeKim.fast-fuzzy-finder?style=flat-square&color=4f86f7" alt="Downloads"/>
+  </a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=TaeKim.fast-fuzzy-finder">
+    <img src="https://img.shields.io/visual-studio-marketplace/r/TaeKim.fast-fuzzy-finder?style=flat-square&color=f5a623" alt="Rating"/>
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square" alt="License: MIT"/>
+  </a>
+</p>
+
+<p align="center">
+  Open with <kbd>Cmd+Shift+F</kbd> / <kbd>Ctrl+Shift+F</kbd> — Type — Navigate — Done.
+</p>
+
+<p align="center">
+  <img alt="Fast Fuzzy Finder screenshot" src="hero.png" />
+</p>
 
 <video src="https://github.com/user-attachments/assets/c7dd7275-8417-43d8-b54d-aea11cc22431" controls />
 
