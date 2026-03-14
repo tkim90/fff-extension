@@ -103,20 +103,22 @@ pub fn order_results(
         let mut file_candidates =
             combine_file_candidates(literal_file_candidates, fuzzy_file_candidates);
         sort_file_candidates(&mut file_candidates, policy);
-        if file_candidates.is_empty() {
-            let mut ranked_lines = line_candidates;
-            sort_line_candidates(&mut ranked_lines, policy);
-            groups.push(
-                ranked_lines
-                    .into_iter()
-                    .map(MergedCandidate::Line)
-                    .collect(),
-            );
-        } else {
+        let mut ranked_lines = line_candidates;
+        sort_line_candidates(&mut ranked_lines, policy);
+
+        if !file_candidates.is_empty() {
             groups.push(
                 file_candidates
                     .into_iter()
                     .map(MergedCandidate::File)
+                    .collect(),
+            );
+        }
+        if !ranked_lines.is_empty() {
+            groups.push(
+                ranked_lines
+                    .into_iter()
+                    .map(MergedCandidate::Line)
                     .collect(),
             );
         }

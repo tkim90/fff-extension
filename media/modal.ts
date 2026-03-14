@@ -355,7 +355,7 @@
 
 	function scheduleQuery(value: string): void {
 		clearTimeout(debounceTimer);
-		debounceTimer = setTimeout(() => postQuery(value), 100);
+		debounceTimer = setTimeout(() => postQuery(value), 20);
 	}
 
 	function cancelResultHighlightWork(): void {

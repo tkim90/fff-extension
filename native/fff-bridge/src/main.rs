@@ -450,7 +450,7 @@ mod tests {
             5,
         );
 
-        assert_eq!(results.len(), 2);
+        assert_eq!(results.len(), 3);
         match &results[0] {
             SearchHit::File { path, .. } => {
                 assert_eq!(path, "/tmp/src/MessageV2.TextPart.ts")
@@ -460,6 +460,13 @@ mod tests {
         match &results[1] {
             SearchHit::File { path, .. } => {
                 assert_eq!(path, "/tmp/src/MessageV2TextPart.ts")
+            }
+            other => panic!("unexpected result: {other:?}"),
+        }
+        match &results[2] {
+            SearchHit::Line { path, line_number, .. } => {
+                assert_eq!(path, "/tmp/src/line.ts");
+                assert_eq!(*line_number, 8);
             }
             other => panic!("unexpected result: {other:?}"),
         }
