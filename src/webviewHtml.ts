@@ -12,6 +12,7 @@ export interface SerializedSearchResult {
 	lineNumber: number;
 	column: number;
 	preview: SearchResult['preview'];
+	imageUri?: string;
 }
 
 let cachedAssets: { css: string; script: string } | undefined;

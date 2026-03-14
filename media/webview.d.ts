@@ -30,6 +30,7 @@ interface SerializedResult {
 	lineNumber: number;
 	column: number;
 	preview: SearchResultPreviewLine[];
+	imageUri?: string;
 }
 
 type ExtensionMessage =

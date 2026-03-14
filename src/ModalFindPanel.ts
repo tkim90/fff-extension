@@ -1,9 +1,14 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { getDebugOptions, traceLifecycle } from './debug';
 import { toErrorMessage } from './errors';
 import { SearchResponse, SearchResult } from './searchTypes';
 import { SearchService } from './searchService';
 import { getHtmlForWebview, warmupAssets, getDisplayText, getMetaText, SerializedSearchResult } from './webviewHtml';
+
+const IMAGE_EXTENSIONS = new Set([
+	'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg', '.ico', '.tiff', '.tif', '.avif'
+]);
 
 type WebviewMessage =
 	| { type: 'ready'; query?: string; caseSensitive?: boolean; regexEnabled?: boolean }
@@ -279,16 +284,22 @@ export class ModalFindPanel implements vscode.Disposable {
 			this.resultMap.set(result.id, result);
 		}
 
-		const serializedResults: SerializedSearchResult[] = response.results.map((result) => ({
-			id: result.id,
-			kind: result.kind,
-			relativePath: result.relativePath,
-			displayText: getDisplayText(result),
-			metaText: getMetaText(result),
-			lineNumber: result.lineNumber,
-			column: result.column,
-			preview: result.preview
-		}));
+		const serializedResults: SerializedSearchResult[] = response.results.map((result) => {
+			const ext = path.extname(result.relativePath).toLowerCase();
+			return {
+				id: result.id,
+				kind: result.kind,
+				relativePath: result.relativePath,
+				displayText: getDisplayText(result),
+				metaText: getMetaText(result),
+				lineNumber: result.lineNumber,
+				column: result.column,
+				preview: result.preview,
+				imageUri: IMAGE_EXTENSIONS.has(ext)
+					? this.panel.webview.asWebviewUri(result.uri).toString()
+					: undefined
+			};
+		});
 
 		this.postMessage({
 			type: 'results',

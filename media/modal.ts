@@ -81,6 +81,7 @@
 	let lastRenderedResults: SerializedResult[] | null = null;
 	let pendingPreviewRaf = 0;
 	let pendingHighlightTimer: ReturnType<typeof setTimeout> | 0 = 0;
+	let pendingImageTimer: ReturnType<typeof setTimeout> | 0 = 0;
 	let pendingResultHighlightRaf = 0;
 	let cachedSearchPattern: RegExp | null = null;
 	let cachedSearchPatternKey = '';
@@ -490,10 +491,40 @@
 			clearTimeout(pendingHighlightTimer);
 			pendingHighlightTimer = 0;
 		}
+		if (pendingImageTimer) {
+			clearTimeout(pendingImageTimer);
+			pendingImageTimer = 0;
+		}
 
 		const selected = results[selectedIndex];
 		if (!selected) {
 			previewRoot.innerHTML = '<div class="empty">Preview will appear here.</div>';
+			return;
+		}
+
+		// Image preview with 250ms debounce
+		if (selected.imageUri) {
+			previewRoot.innerHTML = `
+				<div class="preview-header">
+					<div>${escapeHtml(selected.relativePath)}</div>
+					<div></div>
+				</div>
+				<div class="image-preview"></div>
+			`;
+			const snapshot = selectedIndex;
+			pendingImageTimer = setTimeout(() => {
+				pendingImageTimer = 0;
+				if (selectedIndex !== snapshot) {
+					return;
+				}
+				const container = previewRoot.querySelector('.image-preview');
+				if (container) {
+					const img = document.createElement('img');
+					img.src = selected.imageUri!;
+					img.alt = selected.relativePath;
+					container.appendChild(img);
+				}
+			}, 250);
 			return;
 		}
 
@@ -557,6 +588,10 @@
 		if (pendingHighlightTimer) {
 			clearTimeout(pendingHighlightTimer);
 			pendingHighlightTimer = 0;
+		}
+		if (pendingImageTimer) {
+			clearTimeout(pendingImageTimer);
+			pendingImageTimer = 0;
 		}
 		renderResults();
 		renderPreview();
