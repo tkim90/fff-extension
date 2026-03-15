@@ -482,12 +482,15 @@
 			const titleClass = result.kind === 'line' ? 'is-line' : 'is-file';
 			const displayText = truncate(result.displayText, 120);
 			const language = result.kind === 'line' ? detectLanguage(result.relativePath) : '';
-			const titleHtml = escapeHtml(displayText);
+			const titleHtml = language
+				? syntaxHighlight(displayText, language)
+				: escapeHtml(displayText);
+			const highlighted = language && typeof hljs !== 'undefined' ? 'true' : '';
 			return `
 				<button class="result ${selectedClass}" data-result-id="${escapeHtml(result.id)}" data-index="${index}">
 					<div class="badge ${badgeClass}">${escapeHtml(result.kind)}</div>
 					<div class="result-main">
-						<div class="result-title ${titleClass}" data-result-index="${index}" data-raw-text="${escapeHtml(displayText)}" data-language="${escapeHtml(language || '')}">${titleHtml}</div>
+						<div class="result-title ${titleClass}" data-result-index="${index}" data-raw-text="${escapeHtml(displayText)}" data-language="${escapeHtml(language || '')}" data-syntax-highlighted="${highlighted}">${titleHtml}</div>
 					</div>
 					<div class="result-pos">${escapeHtml(result.metaText)}</div>
 				</button>
