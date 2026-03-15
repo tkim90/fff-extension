@@ -351,10 +351,8 @@
 	}
 
 	function updateWordMatchToggle(): void {
-		console.log('[fff] updateWordMatchToggle called, wordMatch:', wordMatch, 'element:', wordToggle, 'classList before:', wordToggle.className);
 		wordToggle.classList.toggle('is-active', wordMatch);
 		wordToggle.setAttribute('aria-pressed', String(wordMatch));
-		console.log('[fff] classList after:', wordToggle.className);
 	}
 
 	function updateRegexToggle(): void {
@@ -721,10 +719,8 @@
 	});
 
 	wordToggle.addEventListener('click', () => {
-		console.log('[fff] wordToggle clicked, wordMatch was:', wordMatch);
 		wordMatch = !wordMatch;
 		updateWordMatchToggle();
-		console.log('[fff] wordMatch is now:', wordMatch, 'button classes:', wordToggle.className);
 		postQuery(queryInput.value);
 	});
 
