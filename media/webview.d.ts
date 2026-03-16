@@ -54,7 +54,8 @@ type ExtensionMessage =
 	  }
 	| { type: 'error'; message: string }
 	| { type: 'restoreDimensions'; width?: number; height?: number; splitRatio?: number }
-	| { type: 'restoreSearchSettings'; query: string; caseSensitive: boolean; wordMatch: boolean; regexEnabled: boolean; filtersVisible: boolean; includePattern: string; excludePattern: string };
+	| { type: 'restoreSearchSettings'; query: string; caseSensitive: boolean; wordMatch: boolean; regexEnabled: boolean; filtersVisible: boolean; includePattern: string; excludePattern: string }
+	| { type: 'toggleSearchOption'; option: 'caseSensitive' | 'wordMatch' | 'regexEnabled' };
 
 interface HljsApi {
 	highlight(code: string, options: { language: string; ignoreIllegals?: boolean }): { value: string };

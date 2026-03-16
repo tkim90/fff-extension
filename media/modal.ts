@@ -364,19 +364,37 @@
 		});
 	}
 
-	function updateCaseToggle(): void {
+	function syncCaseToggle(): void {
 		caseToggle.classList.toggle('is-active', caseSensitive);
 		caseToggle.setAttribute('aria-pressed', String(caseSensitive));
 	}
 
-	function updateWordMatchToggle(): void {
+	function syncWordToggle(): void {
 		wordToggle.classList.toggle('is-active', wordMatch);
 		wordToggle.setAttribute('aria-pressed', String(wordMatch));
 	}
 
-	function updateRegexToggle(): void {
+	function syncRegexToggle(): void {
 		regexToggle.classList.toggle('is-active', regexEnabled);
 		regexToggle.setAttribute('aria-pressed', String(regexEnabled));
+	}
+
+	function toggleCaseSensitive(): void {
+		caseSensitive = !caseSensitive;
+		syncCaseToggle();
+		postQuery(queryInput.value);
+	}
+
+	function toggleWordMatch(): void {
+		wordMatch = !wordMatch;
+		syncWordToggle();
+		postQuery(queryInput.value);
+	}
+
+	function toggleRegex(): void {
+		regexEnabled = !regexEnabled;
+		syncRegexToggle();
+		postQuery(queryInput.value);
 	}
 
 	function updateFilterToggle(): void {
@@ -746,23 +764,9 @@
 		scheduleQuery(queryInput.value);
 	});
 
-	caseToggle.addEventListener('click', () => {
-		caseSensitive = !caseSensitive;
-		updateCaseToggle();
-		postQuery(queryInput.value);
-	});
-
-	wordToggle.addEventListener('click', () => {
-		wordMatch = !wordMatch;
-		updateWordMatchToggle();
-		postQuery(queryInput.value);
-	});
-
-	regexToggle.addEventListener('click', () => {
-		regexEnabled = !regexEnabled;
-		updateRegexToggle();
-		postQuery(queryInput.value);
-	});
+	caseToggle.addEventListener('click', toggleCaseSensitive);
+	wordToggle.addEventListener('click', toggleWordMatch);
+	regexToggle.addEventListener('click', toggleRegex);
 
 	filterToggle.addEventListener('click', () => {
 		filtersVisible = !filtersVisible;
@@ -969,13 +973,22 @@
 				excludePattern = message.excludePattern;
 				includeFilterInput.value = includePattern;
 				excludeFilterInput.value = excludePattern;
-				updateCaseToggle();
-				updateWordMatchToggle();
-				updateRegexToggle();
+				syncCaseToggle();
+				syncWordToggle();
+				syncRegexToggle();
 				updateFilterToggle();
 				syncState();
 				if (currentQuery) {
 					postQuery(currentQuery);
+				}
+				return;
+			case 'toggleSearchOption':
+				if (message.option === 'caseSensitive') {
+					toggleCaseSensitive();
+				} else if (message.option === 'wordMatch') {
+					toggleWordMatch();
+				} else if (message.option === 'regexEnabled') {
+					toggleRegex();
 				}
 				return;
 		}
@@ -1124,9 +1137,17 @@
 		});
 	})();
 
-	updateCaseToggle();
-	updateWordMatchToggle();
-	updateRegexToggle();
+	const isMac = navigator.platform.toUpperCase().includes('MAC') || navigator.userAgent.includes('Macintosh');
+	caseToggle.title = isMac ? 'Case Sensitive (⌥⌘C)' : 'Case Sensitive (Ctrl+Alt+C)';
+	caseToggle.setAttribute('aria-label', caseToggle.title);
+	wordToggle.title = isMac ? 'Words (⌥⌘W)' : 'Words (Ctrl+Alt+W)';
+	wordToggle.setAttribute('aria-label', wordToggle.title);
+	regexToggle.title = isMac ? 'Regex (⌥⌘R)' : 'Regex (Ctrl+Alt+R)';
+	regexToggle.setAttribute('aria-label', regexToggle.title);
+
+	syncCaseToggle();
+	syncWordToggle();
+	syncRegexToggle();
 	updateFilterToggle();
 	queryInput.focus();
 	queryInput.select();
