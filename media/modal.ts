@@ -1151,6 +1151,8 @@
 	wordToggle.setAttribute('aria-label', wordToggle.title);
 	regexToggle.title = isMac ? 'Regex (⌥⌘R)' : 'Regex (Ctrl+Alt+R)';
 	regexToggle.setAttribute('aria-label', regexToggle.title);
+	filterToggle.title = isMac ? 'Filter Files (⌥⌘F)' : 'Filter Files (Ctrl+Alt+F)';
+	filterToggle.setAttribute('aria-label', filterToggle.title);
 
 	syncCaseToggle();
 	syncWordToggle();
