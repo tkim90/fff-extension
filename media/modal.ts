@@ -763,22 +763,22 @@
 
 	document.addEventListener('keydown', (event) => {
 		if (event.altKey && (event.metaKey || event.ctrlKey)) {
-			const key = event.key.toLowerCase();
-			if (key === 'c') {
+			const code = event.code;
+			if (code === 'KeyC') {
 				event.preventDefault();
 				caseSensitive = !caseSensitive;
 				updateCaseToggle();
 				postQuery(queryInput.value);
 				return;
 			}
-			if (key === 'w') {
+			if (code === 'KeyW') {
 				event.preventDefault();
 				wordMatch = !wordMatch;
 				updateWordMatchToggle();
 				postQuery(queryInput.value);
 				return;
 			}
-			if (key === 'r') {
+			if (code === 'KeyR') {
 				event.preventDefault();
 				regexEnabled = !regexEnabled;
 				updateRegexToggle();
