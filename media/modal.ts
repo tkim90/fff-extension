@@ -896,6 +896,17 @@
 				}
 				syncState();
 				return;
+			case 'restoreSearchSettings':
+				currentQuery = message.query;
+				queryInput.value = currentQuery;
+				caseSensitive = message.caseSensitive;
+				wordMatch = message.wordMatch;
+				regexEnabled = message.regexEnabled;
+				updateCaseToggle();
+				updateWordMatchToggle();
+				updateRegexToggle();
+				syncState();
+				return;
 		}
 	});
 

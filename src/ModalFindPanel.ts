@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { getDebugOptions, traceLifecycle } from './debug';
 import { toErrorMessage } from './errors';
 import { SearchResponse, SearchResult } from './searchTypes';
+import { SearchSettingsCache } from './searchSettingsCache';
 import { SearchService } from './searchService';
 import { getHtmlForWebview, warmupAssets, getDisplayText, getMetaText, SerializedSearchResult } from './webviewHtml';
 
@@ -46,7 +47,8 @@ export class ModalFindPanel implements vscode.Disposable {
 
 	public static createOrShow(
 		context: vscode.ExtensionContext,
-		searchService: SearchService
+		searchService: SearchService,
+		settingsCache: SearchSettingsCache
 	): void {
 		if (ModalFindPanel.currentPanel) {
 			traceLifecycle('panel.reveal.requested', {
@@ -85,6 +87,7 @@ export class ModalFindPanel implements vscode.Disposable {
 			panel,
 			context,
 			searchService,
+			settingsCache,
 			captureReturnFocusTarget(vscode.window.activeTextEditor),
 			panelId
 		);
@@ -97,16 +100,20 @@ export class ModalFindPanel implements vscode.Disposable {
 	private readonly context: vscode.ExtensionContext;
 	private readonly panelId: number;
 
+	private readonly settingsCache: SearchSettingsCache;
+
 	private constructor(
 		panel: vscode.WebviewPanel,
 		context: vscode.ExtensionContext,
 		searchService: SearchService,
+		settingsCache: SearchSettingsCache,
 		returnFocusTarget: ReturnFocusTarget | undefined,
 		panelId: number
 	) {
 		this.panel = panel;
 		this.context = context;
 		this.searchService = searchService;
+		this.settingsCache = settingsCache;
 		this.returnFocusTarget = returnFocusTarget;
 		this.panelId = panelId;
 
@@ -194,6 +201,23 @@ export class ModalFindPanel implements vscode.Disposable {
 						splitRatio
 					});
 				}
+				const hasWebviewState = Boolean(message.query) || message.caseSensitive || message.wordMatch || message.regexEnabled;
+				if (!hasWebviewState) {
+					const cached = this.settingsCache.get();
+					if (cached.query || cached.caseSensitive || cached.wordMatch || cached.regexEnabled) {
+						this.lastQuery = cached.query;
+						this.lastCaseSensitive = cached.caseSensitive;
+						this.lastWordMatch = cached.wordMatch;
+						this.lastRegexEnabled = cached.regexEnabled;
+						this.postMessage({
+							type: 'restoreSearchSettings',
+							query: cached.query,
+							caseSensitive: cached.caseSensitive,
+							wordMatch: cached.wordMatch,
+							regexEnabled: cached.regexEnabled
+						});
+					}
+				}
 				if (getDebugOptions().disableWarmup) {
 					traceLifecycle('search.warmup.skipped', {
 						panelId: this.panelId,
@@ -214,6 +238,12 @@ export class ModalFindPanel implements vscode.Disposable {
 				this.lastCaseSensitive = message.caseSensitive;
 				this.lastWordMatch = message.wordMatch;
 				this.lastRegexEnabled = message.regexEnabled;
+				this.settingsCache.update({
+					query: message.value,
+					caseSensitive: message.caseSensitive,
+					wordMatch: message.wordMatch,
+					regexEnabled: message.regexEnabled
+				});
 				if (!message.value.trim()) {
 					this.requestVersion += 1;
 					this.showIdleState();
