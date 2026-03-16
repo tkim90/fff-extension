@@ -50,7 +50,8 @@ type ExtensionMessage =
 			};
 	  }
 	| { type: 'error'; message: string }
-	| { type: 'restoreDimensions'; width?: number; height?: number; splitRatio?: number };
+	| { type: 'restoreDimensions'; width?: number; height?: number; splitRatio?: number }
+	| { type: 'restoreSearchSettings'; query: string; caseSensitive: boolean; wordMatch: boolean; regexEnabled: boolean };
 
 interface HljsApi {
 	highlight(code: string, options: { language: string; ignoreIllegals?: boolean }): { value: string };

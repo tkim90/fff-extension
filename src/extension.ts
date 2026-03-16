@@ -1,12 +1,14 @@
 import * as vscode from 'vscode';
 import { disposeDebugResources, getDebugOptions, traceLifecycle } from './debug';
 import { ModalFindPanel } from './ModalFindPanel';
+import { SearchSettingsCache } from './searchSettingsCache';
 import { SearchService } from './searchService';
 
 export function activate(context: vscode.ExtensionContext): void {
 	traceLifecycle('extension.activate.start');
 
 	const searchService = new SearchService(context.extensionUri);
+	const settingsCache = new SearchSettingsCache(context.workspaceState);
 	ModalFindPanel.warmupAssets(context.extensionUri);
 	if (getDebugOptions().disableWarmup) {
 		traceLifecycle('search.warmup.skipped', {
@@ -21,7 +23,7 @@ export function activate(context: vscode.ExtensionContext): void {
 		traceLifecycle('command.invoked', {
 			command: 'fast-fuzzy-finder.open'
 		});
-		ModalFindPanel.createOrShow(context, searchService);
+		ModalFindPanel.createOrShow(context, searchService, settingsCache);
 	});
 
 	context.subscriptions.push(searchService, openCommand, { dispose: disposeDebugResources });
