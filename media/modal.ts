@@ -989,6 +989,13 @@
 					toggleWordMatch();
 				} else if (message.option === 'regexEnabled') {
 					toggleRegex();
+				} else if (message.option === 'filter') {
+					filtersVisible = !filtersVisible;
+					updateFilterToggle();
+					if (filtersVisible) {
+						includeFilterInput.focus();
+					}
+					postQuery(queryInput.value);
 				}
 				return;
 		}
