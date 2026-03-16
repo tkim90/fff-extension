@@ -40,6 +40,7 @@ export class ModalFindPanel implements vscode.Disposable {
 	private lastWordMatch = false;
 	private lastRegexEnabled = false;
 	private returnFocusTarget?: ReturnFocusTarget;
+	private initialQuery?: string;
 
 	public static warmupAssets(extensionUri: vscode.Uri): void {
 		warmupAssets(extensionUri);
@@ -48,7 +49,8 @@ export class ModalFindPanel implements vscode.Disposable {
 	public static createOrShow(
 		context: vscode.ExtensionContext,
 		searchService: SearchService,
-		settingsCache: SearchSettingsCache
+		settingsCache: SearchSettingsCache,
+		initialQuery?: string
 	): void {
 		if (ModalFindPanel.currentPanel) {
 			traceLifecycle('panel.reveal.requested', {
@@ -58,7 +60,7 @@ export class ModalFindPanel implements vscode.Disposable {
 			});
 			ModalFindPanel.currentPanel.captureReturnFocusTarget(vscode.window.activeTextEditor);
 			ModalFindPanel.currentPanel.panel.reveal(vscode.ViewColumn.Active, false);
-			ModalFindPanel.currentPanel.focusQuery();
+			ModalFindPanel.currentPanel.focusQuery(initialQuery);
 			return;
 		}
 
@@ -89,7 +91,8 @@ export class ModalFindPanel implements vscode.Disposable {
 			searchService,
 			settingsCache,
 			captureReturnFocusTarget(vscode.window.activeTextEditor),
-			panelId
+			panelId,
+			initialQuery
 		);
 	}
 
@@ -108,7 +111,8 @@ export class ModalFindPanel implements vscode.Disposable {
 		searchService: SearchService,
 		settingsCache: SearchSettingsCache,
 		returnFocusTarget: ReturnFocusTarget | undefined,
-		panelId: number
+		panelId: number,
+		initialQuery?: string
 	) {
 		this.panel = panel;
 		this.context = context;
@@ -116,6 +120,7 @@ export class ModalFindPanel implements vscode.Disposable {
 		this.settingsCache = settingsCache;
 		this.returnFocusTarget = returnFocusTarget;
 		this.panelId = panelId;
+		this.initialQuery = initialQuery;
 
 		this.disposables.push(
 			this.panel.onDidDispose(() => {
@@ -228,6 +233,10 @@ export class ModalFindPanel implements vscode.Disposable {
 					void this.searchService.warmup('panel-ready');
 				}
 				this.showIdleState();
+				if (this.initialQuery) {
+					this.focusQuery(this.initialQuery);
+					this.initialQuery = undefined;
+				}
 				return;
 			}
 			case 'close':
@@ -441,12 +450,12 @@ export class ModalFindPanel implements vscode.Disposable {
 		}
 	}
 
-	private focusQuery(): void {
+	private focusQuery(query?: string): void {
 		if (this.disposed) {
 			return;
 		}
 
-		this.postMessage({ type: 'focusQuery' });
+		this.postMessage({ type: 'focusQuery', query });
 	}
 
 	private captureReturnFocusTarget(editor: vscode.TextEditor | undefined): void {
