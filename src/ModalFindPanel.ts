@@ -420,10 +420,11 @@ export class ModalFindPanel implements vscode.Disposable {
 				path: focusTarget.uri.fsPath
 			});
 			const document = await vscode.workspace.openTextDocument(focusTarget.uri);
+			const cursorPos = focusTarget.selection?.active ?? new vscode.Position(0, 0);
 			await vscode.window.showTextDocument(document, {
 				preserveFocus: false,
 				viewColumn: focusTarget.viewColumn,
-				selection: focusTarget.selection
+				selection: new vscode.Selection(cursorPos, cursorPos)
 			});
 			traceLifecycle('panel.focus.restore.end', {
 				panelId: this.panelId,
