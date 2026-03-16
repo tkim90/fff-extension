@@ -32,7 +32,8 @@
 </p>
 
 
-<video src="https://github.com/user-attachments/assets/c7dd7275-8417-43d8-b54d-aea11cc22431" controls ></video>
+![CleanShot 2026-03-15 at 23 46 56](https://github.com/user-attachments/assets/fc1261b7-b42e-4629-99a4-8c2cd9753413)
+
 
 ---
 
