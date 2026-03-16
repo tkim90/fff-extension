@@ -31,7 +31,10 @@
   <img alt="Fast Fuzzy Finder screenshot" src="hero.png" />
 </p>
 
-<video src="https://github.com/user-attachments/assets/c7dd7275-8417-43d8-b54d-aea11cc22431" controls />
+
+<video src="https://github.com/user-attachments/assets/c7dd7275-8417-43d8-b54d-aea11cc22431" controls ></video>
+
+---
 
 ## Installation
 
