@@ -1,8 +1,8 @@
 {
   "name": "fast-fuzzy-finder",
   "displayName": "Fast Fuzzy Finder",
-  "description": "Global fuzzy search in a WebStorm-style modal for VS Code",
-  "version": "0.0.1",
+  "description": "IntelliJ-like CMD+Shift+F in Cursor / VSCode.",
+  "version": "0.0.2",
   "publisher": "TaeKim",
   "license": "MIT",
   "repository": {
