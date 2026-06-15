@@ -607,12 +607,17 @@
 		// Render preview with syntax highlighting if hljs is ready, plain text otherwise
 		const language = detectLanguage(selected.relativePath);
 		const canHighlight = !!language && typeof hljs !== 'undefined';
-		const previewLines = selected.preview.map((line) => `
-			<div class="code-line ${line.isMatch ? 'is-match' : ''}">
-				<div class="line-number">${line.lineNumber}</div>
-				<div class="code-text">${canHighlight ? syntaxHighlight(line.text || ' ', language) : escapeHtml(line.text || ' ')}</div>
-			</div>
-		`).join('');
+		const previewLines = selected.preview.map((line) => {
+			const gutter = line.isMatch
+				? `<a class="line-number line-link" data-line="${line.lineNumber}" role="link" tabindex="0" title="Open line ${line.lineNumber} in a new tab">${line.lineNumber}</a>`
+				: `<div class="line-number">${line.lineNumber}</div>`;
+			return `
+				<div class="code-line ${line.isMatch ? 'is-match' : ''}">
+					${gutter}
+					<div class="code-text">${canHighlight ? syntaxHighlight(line.text || ' ', language) : escapeHtml(line.text || ' ')}</div>
+				</div>
+			`;
+		}).join('');
 
 		previewRoot.innerHTML = `
 			<div class="preview-header">
@@ -911,6 +916,36 @@
 
 	resultsRoot.addEventListener('scroll', () => {
 		scheduleResultHighlight();
+	});
+
+	function openLineLink(link: HTMLElement): void {
+		const selected = results[selectedIndex];
+		if (!selected) {
+			return;
+		}
+		const lineNumber = Number(link.dataset.line) || selected.lineNumber;
+		vscode.postMessage({ type: 'openResult', resultId: selected.id, lineNumber });
+	}
+
+	previewRoot.addEventListener('click', (event) => {
+		const link = (event.target as HTMLElement).closest('.line-link') as HTMLElement | null;
+		if (!link) {
+			return;
+		}
+		event.preventDefault();
+		openLineLink(link);
+	});
+
+	previewRoot.addEventListener('keydown', (event) => {
+		if (event.key !== 'Enter') {
+			return;
+		}
+		const link = (event.target as HTMLElement).closest('.line-link') as HTMLElement | null;
+		if (!link) {
+			return;
+		}
+		event.preventDefault();
+		openLineLink(link);
 	});
 
 	window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {

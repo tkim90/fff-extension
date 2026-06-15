@@ -16,7 +16,7 @@ type WebviewMessage =
 	| { type: 'lifecycleTrace'; event: string; elapsedMs?: number; detail?: Record<string, unknown> }
 	| { type: 'close' }
 	| { type: 'queryChanged'; value: string; caseSensitive: boolean; wordMatch: boolean; regexEnabled: boolean; filtersVisible: boolean; includePattern: string; excludePattern: string }
-	| { type: 'openResult'; resultId: string }
+	| { type: 'openResult'; resultId: string; lineNumber?: number }
 	| { type: 'splitRatioChanged'; ratio: number }
 	| { type: 'splitOrientationChanged'; horizontal: boolean };
 
@@ -289,7 +289,7 @@ export class ModalFindPanel implements vscode.Disposable {
 				);
 				return;
 			case 'openResult':
-				await this.openResult(message.resultId);
+				await this.openResult(message.resultId, message.lineNumber);
 				return;
 			case 'splitRatioChanged':
 				void this.context.globalState.update('modalSplitRatio', message.ratio);
@@ -449,7 +449,7 @@ export class ModalFindPanel implements vscode.Disposable {
 		}
 	}
 
-	private async openResult(resultId: string): Promise<void> {
+	private async openResult(resultId: string, lineOverride?: number): Promise<void> {
 		if (this.disposed) {
 			return;
 		}
@@ -465,8 +465,9 @@ export class ModalFindPanel implements vscode.Disposable {
 				preview: false,
 				viewColumn: vscode.ViewColumn.Active
 			});
-			const line = Math.max(0, result.lineNumber - 1);
-			const column = Math.max(0, result.column - 1);
+			const targetLine = lineOverride ?? result.lineNumber;
+			const line = Math.max(0, targetLine - 1);
+			const column = lineOverride !== undefined ? 0 : Math.max(0, result.column - 1);
 			const position = new vscode.Position(line, column);
 			editor.selection = new vscode.Selection(position, position);
 			editor.revealRange(
