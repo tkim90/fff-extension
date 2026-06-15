@@ -84,8 +84,6 @@
 	let includePattern = '';
 	let excludePattern = '';
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-	let modalWidth = 0;
-	let modalHeight = 0;
 	let splitRatio = 0;
 	let lastRenderedResults: SerializedResult[] | null = null;
 	let pendingPreviewRaf = 0;
@@ -123,12 +121,6 @@
 	if (savedState?.excludePattern) {
 		excludePattern = savedState.excludePattern;
 		excludeFilterInput.value = excludePattern;
-	}
-	if (savedState?.modalWidth && savedState?.modalHeight) {
-		modalWidth = savedState.modalWidth;
-		modalHeight = savedState.modalHeight;
-		modalRoot.style.width = modalWidth + 'px';
-		modalRoot.style.height = modalHeight + 'px';
 	}
 	if (savedState?.splitRatio) {
 		splitRatio = savedState.splitRatio;
@@ -333,10 +325,6 @@
 
 	function syncState(): void {
 		const state: WebviewPersistedState = { query: currentQuery, caseSensitive, wordMatch, regexEnabled, filtersVisible, includePattern, excludePattern };
-		if (modalWidth && modalHeight) {
-			state.modalWidth = modalWidth;
-			state.modalHeight = modalHeight;
-		}
 		if (splitRatio) {
 			state.splitRatio = splitRatio;
 		}
@@ -894,14 +882,6 @@
 		scheduleResultHighlight();
 	});
 
-	interface ResizeState {
-		corner: string;
-		startX: number;
-		startY: number;
-		startW: number;
-		startH: number;
-	}
-
 	window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
 		const message = event.data;
 		switch (message.type) {
@@ -951,12 +931,6 @@
 				renderAll();
 				return;
 			case 'restoreDimensions':
-				if (message.width && message.height) {
-					modalWidth = message.width;
-					modalHeight = message.height;
-					modalRoot.style.width = modalWidth + 'px';
-					modalRoot.style.height = modalHeight + 'px';
-				}
 				if (message.splitRatio) {
 					applySplitRatio(message.splitRatio);
 				}
@@ -1010,79 +984,6 @@
 		});
 		scheduleFirstVisibleFrame('visibleAgain');
 	});
-
-	// Corner resize handles
-	(function initResize() {
-		let active: ResizeState | null = null;
-		let rafId = 0;
-
-		document.addEventListener('mousedown', (event) => {
-			const handle = (event.target as HTMLElement).closest('[data-resize]') as HTMLElement | null;
-			if (!handle) {
-				return;
-			}
-			event.preventDefault();
-			const rect = modalRoot.getBoundingClientRect();
-			active = {
-				corner: handle.dataset.resize!,
-				startX: event.clientX,
-				startY: event.clientY,
-				startW: rect.width,
-				startH: rect.height
-			};
-		});
-
-		document.addEventListener('mousemove', (event) => {
-			if (!active) {
-				return;
-			}
-			event.preventDefault();
-
-			const cx = event.clientX;
-			const cy = event.clientY;
-
-			if (rafId) {
-				return;
-			}
-			rafId = requestAnimationFrame(() => {
-				rafId = 0;
-				if (!active) {
-					return;
-				}
-				const dx = cx - active.startX;
-				const dy = cy - active.startY;
-				let newW = active.startW;
-				let newH = active.startH;
-
-				if (active.corner === 'se') { newW += dx; newH += dy; }
-				else if (active.corner === 'sw') { newW -= dx; newH += dy; }
-				else if (active.corner === 'ne') { newW += dx; newH -= dy; }
-				else if (active.corner === 'nw') { newW -= dx; newH -= dy; }
-
-				newW = Math.max(480, Math.min(newW, window.innerWidth * 0.96));
-				newH = Math.max(400, Math.min(newH, window.innerHeight * 0.92));
-
-				modalRoot.style.width = newW + 'px';
-				modalRoot.style.height = newH + 'px';
-			});
-		});
-
-		document.addEventListener('mouseup', () => {
-			if (!active) {
-				return;
-			}
-			if (rafId) {
-				cancelAnimationFrame(rafId);
-				rafId = 0;
-			}
-			const rect = modalRoot.getBoundingClientRect();
-			modalWidth = Math.round(rect.width);
-			modalHeight = Math.round(rect.height);
-			active = null;
-			syncState();
-			vscode.postMessage({ type: 'resizeDimensionsChanged', width: modalWidth, height: modalHeight });
-		});
-	})();
 
 	// Splitter drag to resize results vs preview
 	(function initSplitter() {

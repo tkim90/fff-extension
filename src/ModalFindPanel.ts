@@ -17,7 +17,6 @@ type WebviewMessage =
 	| { type: 'close' }
 	| { type: 'queryChanged'; value: string; caseSensitive: boolean; wordMatch: boolean; regexEnabled: boolean; filtersVisible: boolean; includePattern: string; excludePattern: string }
 	| { type: 'openResult'; resultId: string }
-	| { type: 'resizeDimensionsChanged'; width: number; height: number }
 	| { type: 'splitRatioChanged'; ratio: number };
 
 interface ReturnFocusTarget {
@@ -210,13 +209,10 @@ export class ModalFindPanel implements vscode.Disposable {
 				this.lastCaseSensitive = message.caseSensitive ?? this.lastCaseSensitive;
 				this.lastWordMatch = message.wordMatch ?? this.lastWordMatch;
 				this.lastRegexEnabled = message.regexEnabled ?? this.lastRegexEnabled;
-				const dims = this.context.globalState.get<{ width: number; height: number }>('modalDimensions');
 				const splitRatio = this.context.globalState.get<number>('modalSplitRatio');
-				if (dims || splitRatio !== undefined) {
+				if (splitRatio !== undefined) {
 					this.postMessage({
 						type: 'restoreDimensions',
-						width: dims?.width,
-						height: dims?.height,
 						splitRatio
 					});
 				}
@@ -291,12 +287,6 @@ export class ModalFindPanel implements vscode.Disposable {
 				return;
 			case 'openResult':
 				await this.openResult(message.resultId);
-				return;
-			case 'resizeDimensionsChanged':
-				void this.context.globalState.update('modalDimensions', {
-					width: message.width,
-					height: message.height
-				});
 				return;
 			case 'splitRatioChanged':
 				void this.context.globalState.update('modalSplitRatio', message.ratio);

@@ -14,8 +14,6 @@ interface WebviewPersistedState {
 	filtersVisible?: boolean;
 	includePattern?: string;
 	excludePattern?: string;
-	modalWidth?: number;
-	modalHeight?: number;
 	splitRatio?: number;
 }
 
@@ -53,7 +51,7 @@ type ExtensionMessage =
 			};
 	  }
 	| { type: 'error'; message: string }
-	| { type: 'restoreDimensions'; width?: number; height?: number; splitRatio?: number }
+	| { type: 'restoreDimensions'; splitRatio?: number }
 	| { type: 'restoreSearchSettings'; query: string; caseSensitive: boolean; wordMatch: boolean; regexEnabled: boolean; filtersVisible: boolean; includePattern: string; excludePattern: string }
 	| { type: 'toggleSearchOption'; option: 'caseSensitive' | 'wordMatch' | 'regexEnabled' };
 
