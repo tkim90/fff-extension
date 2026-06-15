@@ -15,45 +15,22 @@ html, body {
 	font-family: var(--vscode-font-family);
 }
 
-body {
-	padding: 18px;
-}
-
 .shell {
 	height: 100%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+	width: 100%;
 }
 
 .modal {
 	position: relative;
-	width: min(1120px, 96vw);
-	height: min(760px, 92vh);
-	min-width: 480px;
-	min-height: 400px;
-	max-width: 96vw;
-	max-height: 92vh;
+	width: 100%;
+	height: 100%;
 	display: grid;
-	grid-template-rows: auto minmax(80px, 0.8fr) 5px minmax(80px, 1.2fr) auto;
+	grid-template-rows: auto 1fr auto;
 	background: var(--vscode-sideBar-background, #171717);
-	border: 1px solid var(--vscode-panel-border, #2b2b2b);
 	border-radius: 0;
 	box-shadow: none;
 	overflow: hidden;
 }
-
-.resize-handle {
-	position: absolute;
-	width: 16px;
-	height: 16px;
-	z-index: 10;
-}
-
-.resize-handle-nw { top: 0; left: 0; cursor: nw-resize; }
-.resize-handle-ne { top: 0; right: 0; cursor: ne-resize; }
-.resize-handle-sw { bottom: 0; left: 0; cursor: sw-resize; }
-.resize-handle-se { bottom: 0; right: 0; cursor: se-resize; }
 
 .header {
 	padding: 18px 18px 14px;
@@ -225,9 +202,31 @@ body {
 	align-self: center;
 }
 
+.split-area {
+	display: grid;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.split-area.is-vertical {
+	grid-template-rows: minmax(80px, 0.8fr) 5px minmax(80px, 1.2fr);
+}
+
+.split-area.is-horizontal {
+	grid-template-columns: minmax(80px, 0.8fr) 5px minmax(80px, 1.2fr);
+}
+
 .splitter {
 	background: var(--vscode-panel-border, #2b2b2b);
+}
+
+.split-area.is-vertical > .splitter {
 	cursor: row-resize;
+}
+
+.split-area.is-horizontal > .splitter {
+	cursor: col-resize;
 }
 
 .splitter:hover {
@@ -276,6 +275,22 @@ body {
 	text-align: right;
 	color: var(--vscode-editorLineNumber-foreground, #6d6d6d);
 	user-select: none;
+}
+
+.line-link {
+	color: var(--vscode-textLink-foreground, #569cd6);
+	cursor: pointer;
+	text-decoration: none;
+}
+
+.line-link:hover {
+	color: var(--vscode-textLink-activeForeground, var(--vscode-textLink-foreground, #569cd6));
+	text-decoration: underline;
+}
+
+.line-link:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 1px var(--vscode-focusBorder);
 }
 
 .footer {

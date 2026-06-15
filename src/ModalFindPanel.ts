@@ -16,9 +16,9 @@ type WebviewMessage =
 	| { type: 'lifecycleTrace'; event: string; elapsedMs?: number; detail?: Record<string, unknown> }
 	| { type: 'close' }
 	| { type: 'queryChanged'; value: string; caseSensitive: boolean; wordMatch: boolean; regexEnabled: boolean; filtersVisible: boolean; includePattern: string; excludePattern: string }
-	| { type: 'openResult'; resultId: string }
-	| { type: 'resizeDimensionsChanged'; width: number; height: number }
-	| { type: 'splitRatioChanged'; ratio: number };
+	| { type: 'openResult'; resultId: string; lineNumber?: number }
+	| { type: 'splitRatioChanged'; ratio: number }
+	| { type: 'splitOrientationChanged'; horizontal: boolean };
 
 interface ReturnFocusTarget {
 	uri: vscode.Uri;
@@ -110,7 +110,7 @@ export class ModalFindPanel implements vscode.Disposable {
 		ModalFindPanel.currentPanel?.panel.dispose();
 	}
 
-	public static toggleSearchOption(option: 'caseSensitive' | 'wordMatch' | 'regexEnabled' | 'filter'): void {
+	public static toggleSearchOption(option: 'caseSensitive' | 'wordMatch' | 'regexEnabled' | 'filter' | 'splitOrientation'): void {
 		ModalFindPanel.currentPanel?.postMessage({ type: 'toggleSearchOption', option });
 	}
 
@@ -210,14 +210,13 @@ export class ModalFindPanel implements vscode.Disposable {
 				this.lastCaseSensitive = message.caseSensitive ?? this.lastCaseSensitive;
 				this.lastWordMatch = message.wordMatch ?? this.lastWordMatch;
 				this.lastRegexEnabled = message.regexEnabled ?? this.lastRegexEnabled;
-				const dims = this.context.globalState.get<{ width: number; height: number }>('modalDimensions');
 				const splitRatio = this.context.globalState.get<number>('modalSplitRatio');
-				if (dims || splitRatio !== undefined) {
+				const splitHorizontal = this.context.globalState.get<boolean>('modalSplitOrientation');
+				if (splitRatio !== undefined || splitHorizontal !== undefined) {
 					this.postMessage({
 						type: 'restoreDimensions',
-						width: dims?.width,
-						height: dims?.height,
-						splitRatio
+						splitRatio,
+						horizontal: splitHorizontal
 					});
 				}
 				const hasWebviewState = Boolean(message.query) || message.caseSensitive || message.wordMatch || message.regexEnabled;
@@ -290,16 +289,13 @@ export class ModalFindPanel implements vscode.Disposable {
 				);
 				return;
 			case 'openResult':
-				await this.openResult(message.resultId);
-				return;
-			case 'resizeDimensionsChanged':
-				void this.context.globalState.update('modalDimensions', {
-					width: message.width,
-					height: message.height
-				});
+				await this.openResult(message.resultId, message.lineNumber);
 				return;
 			case 'splitRatioChanged':
 				void this.context.globalState.update('modalSplitRatio', message.ratio);
+				return;
+			case 'splitOrientationChanged':
+				void this.context.globalState.update('modalSplitOrientation', message.horizontal);
 				return;
 		}
 	}
@@ -453,7 +449,7 @@ export class ModalFindPanel implements vscode.Disposable {
 		}
 	}
 
-	private async openResult(resultId: string): Promise<void> {
+	private async openResult(resultId: string, lineOverride?: number): Promise<void> {
 		if (this.disposed) {
 			return;
 		}
@@ -469,8 +465,9 @@ export class ModalFindPanel implements vscode.Disposable {
 				preview: false,
 				viewColumn: vscode.ViewColumn.Active
 			});
-			const line = Math.max(0, result.lineNumber - 1);
-			const column = Math.max(0, result.column - 1);
+			const targetLine = lineOverride ?? result.lineNumber;
+			const line = Math.max(0, targetLine - 1);
+			const column = lineOverride !== undefined ? 0 : Math.max(0, result.column - 1);
 			const position = new vscode.Position(line, column);
 			editor.selection = new vscode.Selection(position, position);
 			editor.revealRange(
@@ -505,7 +502,7 @@ export class ModalFindPanel implements vscode.Disposable {
 		this.postMessage({
 			type: 'idle',
 			metaMessage: 'Type to search the workspace.',
-			statusMessage: 'Type to search'
+			statusMessage: ''
 		});
 	}
 

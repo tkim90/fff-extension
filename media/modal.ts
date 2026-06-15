@@ -66,10 +66,11 @@
 	const wordToggle = document.getElementById('word-toggle')!;
 	const regexToggle = document.getElementById('regex-toggle')!;
 	const filterToggle = document.getElementById('filter-toggle')!;
+	const splitToggle = document.getElementById('split-toggle')!;
 	const filterRow = document.getElementById('filter-row')!;
 	const includeFilterInput = document.getElementById('include-filter') as HTMLInputElement;
 	const excludeFilterInput = document.getElementById('exclude-filter') as HTMLInputElement;
-	const modalRoot = document.querySelector('.modal') as HTMLElement;
+	const splitArea = document.getElementById('split-area')!;
 	const splitter = document.getElementById('splitter')!;
 	const highlightSrc = document.body.dataset.highlightSrc;
 	const scriptNonce = document.body.dataset.scriptNonce;
@@ -84,9 +85,8 @@
 	let includePattern = '';
 	let excludePattern = '';
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-	let modalWidth = 0;
-	let modalHeight = 0;
 	let splitRatio = 0;
+	let splitHorizontal = false;
 	let lastRenderedResults: SerializedResult[] | null = null;
 	let pendingPreviewRaf = 0;
 	let pendingHighlightTimer: ReturnType<typeof setTimeout> | 0 = 0;
@@ -124,16 +124,11 @@
 		excludePattern = savedState.excludePattern;
 		excludeFilterInput.value = excludePattern;
 	}
-	if (savedState?.modalWidth && savedState?.modalHeight) {
-		modalWidth = savedState.modalWidth;
-		modalHeight = savedState.modalHeight;
-		modalRoot.style.width = modalWidth + 'px';
-		modalRoot.style.height = modalHeight + 'px';
-	}
 	if (savedState?.splitRatio) {
 		splitRatio = savedState.splitRatio;
-		const r = Math.max(0.1, Math.min(0.9, splitRatio));
-		modalRoot.style.gridTemplateRows = 'auto ' + r + 'fr 5px ' + (1 - r) + 'fr auto';
+	}
+	if (savedState?.splitHorizontal) {
+		splitHorizontal = true;
 	}
 
 	function escapeHtml(value: string): string {
@@ -332,21 +327,30 @@
 	}
 
 	function syncState(): void {
-		const state: WebviewPersistedState = { query: currentQuery, caseSensitive, wordMatch, regexEnabled, filtersVisible, includePattern, excludePattern };
-		if (modalWidth && modalHeight) {
-			state.modalWidth = modalWidth;
-			state.modalHeight = modalHeight;
-		}
+		const state: WebviewPersistedState = { query: currentQuery, caseSensitive, wordMatch, regexEnabled, filtersVisible, includePattern, excludePattern, splitHorizontal };
 		if (splitRatio) {
 			state.splitRatio = splitRatio;
 		}
 		vscode.setState(state);
 	}
 
+	function applyLayout(): void {
+		splitArea.classList.toggle('is-horizontal', splitHorizontal);
+		splitArea.classList.toggle('is-vertical', !splitHorizontal);
+		const axis = splitHorizontal ? 'gridTemplateColumns' : 'gridTemplateRows';
+		const offAxis = splitHorizontal ? 'gridTemplateRows' : 'gridTemplateColumns';
+		splitArea.style[offAxis] = '';
+		if (splitRatio) {
+			const r = Math.max(0.1, Math.min(0.9, splitRatio));
+			splitArea.style[axis] = r + 'fr 5px ' + (1 - r) + 'fr';
+		} else {
+			splitArea.style[axis] = '';
+		}
+	}
+
 	function applySplitRatio(ratio: number): void {
 		splitRatio = ratio;
-		const r = Math.max(0.1, Math.min(0.9, ratio));
-		modalRoot.style.gridTemplateRows = 'auto ' + r + 'fr 5px ' + (1 - r) + 'fr auto';
+		applyLayout();
 	}
 
 	function scheduleFirstVisibleFrame(source: string): void {
@@ -401,6 +405,19 @@
 		filterToggle.classList.toggle('is-active', filtersVisible);
 		filterToggle.setAttribute('aria-pressed', String(filtersVisible));
 		filterRow.style.display = filtersVisible ? '' : 'none';
+	}
+
+	function syncSplitToggle(): void {
+		splitToggle.classList.toggle('is-active', splitHorizontal);
+		splitToggle.setAttribute('aria-pressed', String(splitHorizontal));
+	}
+
+	function toggleSplitOrientation(): void {
+		splitHorizontal = !splitHorizontal;
+		syncSplitToggle();
+		applyLayout();
+		syncState();
+		vscode.postMessage({ type: 'splitOrientationChanged', horizontal: splitHorizontal });
 	}
 
 	function postQuery(value: string): void {
@@ -590,12 +607,17 @@
 		// Render preview with syntax highlighting if hljs is ready, plain text otherwise
 		const language = detectLanguage(selected.relativePath);
 		const canHighlight = !!language && typeof hljs !== 'undefined';
-		const previewLines = selected.preview.map((line) => `
-			<div class="code-line ${line.isMatch ? 'is-match' : ''}">
-				<div class="line-number">${line.lineNumber}</div>
-				<div class="code-text">${canHighlight ? syntaxHighlight(line.text || ' ', language) : escapeHtml(line.text || ' ')}</div>
-			</div>
-		`).join('');
+		const previewLines = selected.preview.map((line) => {
+			const gutter = line.isMatch
+				? `<a class="line-number line-link" data-line="${line.lineNumber}" role="link" tabindex="0" title="Open line ${line.lineNumber} in a new tab">${line.lineNumber}</a>`
+				: `<div class="line-number">${line.lineNumber}</div>`;
+			return `
+				<div class="code-line ${line.isMatch ? 'is-match' : ''}">
+					${gutter}
+					<div class="code-text">${canHighlight ? syntaxHighlight(line.text || ' ', language) : escapeHtml(line.text || ' ')}</div>
+				</div>
+			`;
+		}).join('');
 
 		previewRoot.innerHTML = `
 			<div class="preview-header">
@@ -777,6 +799,8 @@
 		postQuery(queryInput.value);
 	});
 
+	splitToggle.addEventListener('click', toggleSplitOrientation);
+
 	includeFilterInput.addEventListener('input', () => {
 		includePattern = includeFilterInput.value;
 		scheduleQuery(queryInput.value);
@@ -894,13 +918,35 @@
 		scheduleResultHighlight();
 	});
 
-	interface ResizeState {
-		corner: string;
-		startX: number;
-		startY: number;
-		startW: number;
-		startH: number;
+	function openLineLink(link: HTMLElement): void {
+		const selected = results[selectedIndex];
+		if (!selected) {
+			return;
+		}
+		const lineNumber = Number(link.dataset.line) || selected.lineNumber;
+		vscode.postMessage({ type: 'openResult', resultId: selected.id, lineNumber });
 	}
+
+	previewRoot.addEventListener('click', (event) => {
+		const link = (event.target as HTMLElement).closest('.line-link') as HTMLElement | null;
+		if (!link) {
+			return;
+		}
+		event.preventDefault();
+		openLineLink(link);
+	});
+
+	previewRoot.addEventListener('keydown', (event) => {
+		if (event.key !== 'Enter') {
+			return;
+		}
+		const link = (event.target as HTMLElement).closest('.line-link') as HTMLElement | null;
+		if (!link) {
+			return;
+		}
+		event.preventDefault();
+		openLineLink(link);
+	});
 
 	window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
 		const message = event.data;
@@ -920,7 +966,7 @@
 				results = [];
 				selectedIndex = 0;
 				metaRoot.textContent = message.metaMessage || 'Type to search the workspace.';
-				statusRoot.textContent = message.statusMessage || 'Type to search';
+				statusRoot.textContent = message.statusMessage ?? '';
 				renderAll();
 				return;
 			case 'results':
@@ -951,15 +997,14 @@
 				renderAll();
 				return;
 			case 'restoreDimensions':
-				if (message.width && message.height) {
-					modalWidth = message.width;
-					modalHeight = message.height;
-					modalRoot.style.width = modalWidth + 'px';
-					modalRoot.style.height = modalHeight + 'px';
+				if (typeof message.horizontal === 'boolean') {
+					splitHorizontal = message.horizontal;
+					syncSplitToggle();
 				}
 				if (message.splitRatio) {
-					applySplitRatio(message.splitRatio);
+					splitRatio = message.splitRatio;
 				}
+				applyLayout();
 				syncState();
 				return;
 			case 'restoreSearchSettings':
@@ -996,6 +1041,8 @@
 						includeFilterInput.focus();
 					}
 					postQuery(queryInput.value);
+				} else if (message.option === 'splitOrientation') {
+					toggleSplitOrientation();
 				}
 				return;
 		}
@@ -1011,85 +1058,12 @@
 		scheduleFirstVisibleFrame('visibleAgain');
 	});
 
-	// Corner resize handles
-	(function initResize() {
-		let active: ResizeState | null = null;
-		let rafId = 0;
-
-		document.addEventListener('mousedown', (event) => {
-			const handle = (event.target as HTMLElement).closest('[data-resize]') as HTMLElement | null;
-			if (!handle) {
-				return;
-			}
-			event.preventDefault();
-			const rect = modalRoot.getBoundingClientRect();
-			active = {
-				corner: handle.dataset.resize!,
-				startX: event.clientX,
-				startY: event.clientY,
-				startW: rect.width,
-				startH: rect.height
-			};
-		});
-
-		document.addEventListener('mousemove', (event) => {
-			if (!active) {
-				return;
-			}
-			event.preventDefault();
-
-			const cx = event.clientX;
-			const cy = event.clientY;
-
-			if (rafId) {
-				return;
-			}
-			rafId = requestAnimationFrame(() => {
-				rafId = 0;
-				if (!active) {
-					return;
-				}
-				const dx = cx - active.startX;
-				const dy = cy - active.startY;
-				let newW = active.startW;
-				let newH = active.startH;
-
-				if (active.corner === 'se') { newW += dx; newH += dy; }
-				else if (active.corner === 'sw') { newW -= dx; newH += dy; }
-				else if (active.corner === 'ne') { newW += dx; newH -= dy; }
-				else if (active.corner === 'nw') { newW -= dx; newH -= dy; }
-
-				newW = Math.max(480, Math.min(newW, window.innerWidth * 0.96));
-				newH = Math.max(400, Math.min(newH, window.innerHeight * 0.92));
-
-				modalRoot.style.width = newW + 'px';
-				modalRoot.style.height = newH + 'px';
-			});
-		});
-
-		document.addEventListener('mouseup', () => {
-			if (!active) {
-				return;
-			}
-			if (rafId) {
-				cancelAnimationFrame(rafId);
-				rafId = 0;
-			}
-			const rect = modalRoot.getBoundingClientRect();
-			modalWidth = Math.round(rect.width);
-			modalHeight = Math.round(rect.height);
-			active = null;
-			syncState();
-			vscode.postMessage({ type: 'resizeDimensionsChanged', width: modalWidth, height: modalHeight });
-		});
-	})();
-
 	// Splitter drag to resize results vs preview
 	(function initSplitter() {
 		interface SplitterState {
-			startY: number;
-			startResultsH: number;
-			startPreviewH: number;
+			start: number;
+			startResults: number;
+			startPreview: number;
 		}
 
 		let active: SplitterState | null = null;
@@ -1100,9 +1074,9 @@
 			const resultsRect = resultsRoot.getBoundingClientRect();
 			const previewRect = previewRoot.getBoundingClientRect();
 			active = {
-				startY: event.clientY,
-				startResultsH: resultsRect.height,
-				startPreviewH: previewRect.height
+				start: splitHorizontal ? event.clientX : event.clientY,
+				startResults: splitHorizontal ? resultsRect.width : resultsRect.height,
+				startPreview: splitHorizontal ? previewRect.width : previewRect.height
 			};
 		});
 
@@ -1112,7 +1086,7 @@
 			}
 			event.preventDefault();
 
-			const cy = event.clientY;
+			const coord = splitHorizontal ? event.clientX : event.clientY;
 
 			if (rafId) {
 				return;
@@ -1122,10 +1096,10 @@
 				if (!active) {
 					return;
 				}
-				const dy = cy - active.startY;
-				const totalH = active.startResultsH + active.startPreviewH;
-				const newResultsH = Math.max(80, Math.min(totalH - 80, active.startResultsH + dy));
-				const ratio = newResultsH / totalH;
+				const delta = coord - active.start;
+				const total = active.startResults + active.startPreview;
+				const newResults = Math.max(80, Math.min(total - 80, active.startResults + delta));
+				const ratio = newResults / total;
 				applySplitRatio(ratio);
 			});
 		});
@@ -1153,11 +1127,15 @@
 	regexToggle.setAttribute('aria-label', regexToggle.title);
 	filterToggle.title = isMac ? 'Filter Files (⌥⌘F)' : 'Filter Files (Ctrl+Alt+F)';
 	filterToggle.setAttribute('aria-label', filterToggle.title);
+	splitToggle.title = isMac ? 'Split Orientation (⌥⌘V)' : 'Split Orientation (Ctrl+Alt+V)';
+	splitToggle.setAttribute('aria-label', splitToggle.title);
 
 	syncCaseToggle();
 	syncWordToggle();
 	syncRegexToggle();
 	updateFilterToggle();
+	syncSplitToggle();
+	applyLayout();
 	queryInput.focus();
 	queryInput.select();
 	renderAll();
