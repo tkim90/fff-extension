@@ -931,7 +931,7 @@
 				results = [];
 				selectedIndex = 0;
 				metaRoot.textContent = message.metaMessage || 'Type to search the workspace.';
-				statusRoot.textContent = message.statusMessage || 'Type to search';
+				statusRoot.textContent = message.statusMessage ?? '';
 				renderAll();
 				return;
 			case 'results':

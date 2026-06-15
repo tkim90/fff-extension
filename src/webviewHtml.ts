@@ -62,7 +62,7 @@ export function getHtmlForWebview(extensionUri: vscode.Uri, webview: vscode.Webv
 			</div>
 			<div id="footer" class="footer">
 				<div id="meta">Indexing workspace\u2026</div>
-				<div id="status">Type to search</div>
+				<div id="status"></div>
 			</div>
 		</div>
 	</div>

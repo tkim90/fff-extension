@@ -501,7 +501,7 @@ export class ModalFindPanel implements vscode.Disposable {
 		this.postMessage({
 			type: 'idle',
 			metaMessage: 'Type to search the workspace.',
-			statusMessage: 'Type to search'
+			statusMessage: ''
 		});
 	}
 
