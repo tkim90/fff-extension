@@ -17,7 +17,8 @@ type WebviewMessage =
 	| { type: 'close' }
 	| { type: 'queryChanged'; value: string; caseSensitive: boolean; wordMatch: boolean; regexEnabled: boolean; filtersVisible: boolean; includePattern: string; excludePattern: string }
 	| { type: 'openResult'; resultId: string }
-	| { type: 'splitRatioChanged'; ratio: number };
+	| { type: 'splitRatioChanged'; ratio: number }
+	| { type: 'splitOrientationChanged'; horizontal: boolean };
 
 interface ReturnFocusTarget {
 	uri: vscode.Uri;
@@ -109,7 +110,7 @@ export class ModalFindPanel implements vscode.Disposable {
 		ModalFindPanel.currentPanel?.panel.dispose();
 	}
 
-	public static toggleSearchOption(option: 'caseSensitive' | 'wordMatch' | 'regexEnabled' | 'filter'): void {
+	public static toggleSearchOption(option: 'caseSensitive' | 'wordMatch' | 'regexEnabled' | 'filter' | 'splitOrientation'): void {
 		ModalFindPanel.currentPanel?.postMessage({ type: 'toggleSearchOption', option });
 	}
 
@@ -210,10 +211,12 @@ export class ModalFindPanel implements vscode.Disposable {
 				this.lastWordMatch = message.wordMatch ?? this.lastWordMatch;
 				this.lastRegexEnabled = message.regexEnabled ?? this.lastRegexEnabled;
 				const splitRatio = this.context.globalState.get<number>('modalSplitRatio');
-				if (splitRatio !== undefined) {
+				const splitHorizontal = this.context.globalState.get<boolean>('modalSplitOrientation');
+				if (splitRatio !== undefined || splitHorizontal !== undefined) {
 					this.postMessage({
 						type: 'restoreDimensions',
-						splitRatio
+						splitRatio,
+						horizontal: splitHorizontal
 					});
 				}
 				const hasWebviewState = Boolean(message.query) || message.caseSensitive || message.wordMatch || message.regexEnabled;
@@ -290,6 +293,9 @@ export class ModalFindPanel implements vscode.Disposable {
 				return;
 			case 'splitRatioChanged':
 				void this.context.globalState.update('modalSplitRatio', message.ratio);
+				return;
+			case 'splitOrientationChanged':
+				void this.context.globalState.update('modalSplitOrientation', message.horizontal);
 				return;
 		}
 	}

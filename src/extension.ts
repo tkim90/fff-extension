@@ -43,8 +43,11 @@ export function activate(context: vscode.ExtensionContext): void {
 	const toggleFilterCommand = vscode.commands.registerCommand('fast-fuzzy-finder.toggleFilter', () => {
 		ModalFindPanel.toggleSearchOption('filter');
 	});
+	const toggleSplitOrientationCommand = vscode.commands.registerCommand('fast-fuzzy-finder.toggleSplitOrientation', () => {
+		ModalFindPanel.toggleSearchOption('splitOrientation');
+	});
 
-	context.subscriptions.push(searchService, openCommand, toggleCaseCommand, toggleWordCommand, toggleRegexCommand, toggleFilterCommand, { dispose: disposeDebugResources });
+	context.subscriptions.push(searchService, openCommand, toggleCaseCommand, toggleWordCommand, toggleRegexCommand, toggleFilterCommand, toggleSplitOrientationCommand, { dispose: disposeDebugResources });
 	traceLifecycle('extension.activate.end');
 }
 

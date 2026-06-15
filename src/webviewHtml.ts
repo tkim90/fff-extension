@@ -47,6 +47,7 @@ export function getHtmlForWebview(extensionUri: vscode.Uri, webview: vscode.Webv
 						<button id="word-toggle" class="toolbar-button" type="button" title="Words" aria-label="Words" aria-pressed="false">W</button>
 						<button id="regex-toggle" class="toolbar-button" type="button" title="Regex" aria-label="Regex" aria-pressed="false">.*</button>
 						<button id="filter-toggle" class="toolbar-button" type="button" title="Filter files" aria-label="Filter files" aria-pressed="false">F</button>
+						<button id="split-toggle" class="toolbar-button" type="button" title="Split orientation" aria-label="Split orientation" aria-pressed="false">V</button>
 					</div>
 				</div>
 				<div id="filter-row" class="filter-row" style="display:none">
@@ -54,9 +55,11 @@ export function getHtmlForWebview(extensionUri: vscode.Uri, webview: vscode.Webv
 					<input id="exclude-filter" class="filter-input" type="text" spellcheck="false" placeholder="exclude files (*.ts, src/**/my_file)" />
 				</div>
 			</div>
-			<div id="results" class="results" tabindex="0"></div>
-			<div id="splitter" class="splitter"></div>
-			<div id="preview" class="preview" tabindex="0"></div>
+			<div id="split-area" class="split-area is-vertical">
+				<div id="results" class="results" tabindex="0"></div>
+				<div id="splitter" class="splitter"></div>
+				<div id="preview" class="preview" tabindex="0"></div>
+			</div>
 			<div id="footer" class="footer">
 				<div id="meta">Indexing workspace\u2026</div>
 				<div id="status">Type to search</div>

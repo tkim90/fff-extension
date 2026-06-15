@@ -66,10 +66,11 @@
 	const wordToggle = document.getElementById('word-toggle')!;
 	const regexToggle = document.getElementById('regex-toggle')!;
 	const filterToggle = document.getElementById('filter-toggle')!;
+	const splitToggle = document.getElementById('split-toggle')!;
 	const filterRow = document.getElementById('filter-row')!;
 	const includeFilterInput = document.getElementById('include-filter') as HTMLInputElement;
 	const excludeFilterInput = document.getElementById('exclude-filter') as HTMLInputElement;
-	const modalRoot = document.querySelector('.modal') as HTMLElement;
+	const splitArea = document.getElementById('split-area')!;
 	const splitter = document.getElementById('splitter')!;
 	const highlightSrc = document.body.dataset.highlightSrc;
 	const scriptNonce = document.body.dataset.scriptNonce;
@@ -85,6 +86,7 @@
 	let excludePattern = '';
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 	let splitRatio = 0;
+	let splitHorizontal = false;
 	let lastRenderedResults: SerializedResult[] | null = null;
 	let pendingPreviewRaf = 0;
 	let pendingHighlightTimer: ReturnType<typeof setTimeout> | 0 = 0;
@@ -124,8 +126,9 @@
 	}
 	if (savedState?.splitRatio) {
 		splitRatio = savedState.splitRatio;
-		const r = Math.max(0.1, Math.min(0.9, splitRatio));
-		modalRoot.style.gridTemplateRows = 'auto ' + r + 'fr 5px ' + (1 - r) + 'fr auto';
+	}
+	if (savedState?.splitHorizontal) {
+		splitHorizontal = true;
 	}
 
 	function escapeHtml(value: string): string {
@@ -324,17 +327,30 @@
 	}
 
 	function syncState(): void {
-		const state: WebviewPersistedState = { query: currentQuery, caseSensitive, wordMatch, regexEnabled, filtersVisible, includePattern, excludePattern };
+		const state: WebviewPersistedState = { query: currentQuery, caseSensitive, wordMatch, regexEnabled, filtersVisible, includePattern, excludePattern, splitHorizontal };
 		if (splitRatio) {
 			state.splitRatio = splitRatio;
 		}
 		vscode.setState(state);
 	}
 
+	function applyLayout(): void {
+		splitArea.classList.toggle('is-horizontal', splitHorizontal);
+		splitArea.classList.toggle('is-vertical', !splitHorizontal);
+		const axis = splitHorizontal ? 'gridTemplateColumns' : 'gridTemplateRows';
+		const offAxis = splitHorizontal ? 'gridTemplateRows' : 'gridTemplateColumns';
+		splitArea.style[offAxis] = '';
+		if (splitRatio) {
+			const r = Math.max(0.1, Math.min(0.9, splitRatio));
+			splitArea.style[axis] = r + 'fr 5px ' + (1 - r) + 'fr';
+		} else {
+			splitArea.style[axis] = '';
+		}
+	}
+
 	function applySplitRatio(ratio: number): void {
 		splitRatio = ratio;
-		const r = Math.max(0.1, Math.min(0.9, ratio));
-		modalRoot.style.gridTemplateRows = 'auto ' + r + 'fr 5px ' + (1 - r) + 'fr auto';
+		applyLayout();
 	}
 
 	function scheduleFirstVisibleFrame(source: string): void {
@@ -389,6 +405,19 @@
 		filterToggle.classList.toggle('is-active', filtersVisible);
 		filterToggle.setAttribute('aria-pressed', String(filtersVisible));
 		filterRow.style.display = filtersVisible ? '' : 'none';
+	}
+
+	function syncSplitToggle(): void {
+		splitToggle.classList.toggle('is-active', splitHorizontal);
+		splitToggle.setAttribute('aria-pressed', String(splitHorizontal));
+	}
+
+	function toggleSplitOrientation(): void {
+		splitHorizontal = !splitHorizontal;
+		syncSplitToggle();
+		applyLayout();
+		syncState();
+		vscode.postMessage({ type: 'splitOrientationChanged', horizontal: splitHorizontal });
 	}
 
 	function postQuery(value: string): void {
@@ -765,6 +794,8 @@
 		postQuery(queryInput.value);
 	});
 
+	splitToggle.addEventListener('click', toggleSplitOrientation);
+
 	includeFilterInput.addEventListener('input', () => {
 		includePattern = includeFilterInput.value;
 		scheduleQuery(queryInput.value);
@@ -931,9 +962,14 @@
 				renderAll();
 				return;
 			case 'restoreDimensions':
-				if (message.splitRatio) {
-					applySplitRatio(message.splitRatio);
+				if (typeof message.horizontal === 'boolean') {
+					splitHorizontal = message.horizontal;
+					syncSplitToggle();
 				}
+				if (message.splitRatio) {
+					splitRatio = message.splitRatio;
+				}
+				applyLayout();
 				syncState();
 				return;
 			case 'restoreSearchSettings':
@@ -970,6 +1006,8 @@
 						includeFilterInput.focus();
 					}
 					postQuery(queryInput.value);
+				} else if (message.option === 'splitOrientation') {
+					toggleSplitOrientation();
 				}
 				return;
 		}
@@ -988,9 +1026,9 @@
 	// Splitter drag to resize results vs preview
 	(function initSplitter() {
 		interface SplitterState {
-			startY: number;
-			startResultsH: number;
-			startPreviewH: number;
+			start: number;
+			startResults: number;
+			startPreview: number;
 		}
 
 		let active: SplitterState | null = null;
@@ -1001,9 +1039,9 @@
 			const resultsRect = resultsRoot.getBoundingClientRect();
 			const previewRect = previewRoot.getBoundingClientRect();
 			active = {
-				startY: event.clientY,
-				startResultsH: resultsRect.height,
-				startPreviewH: previewRect.height
+				start: splitHorizontal ? event.clientX : event.clientY,
+				startResults: splitHorizontal ? resultsRect.width : resultsRect.height,
+				startPreview: splitHorizontal ? previewRect.width : previewRect.height
 			};
 		});
 
@@ -1013,7 +1051,7 @@
 			}
 			event.preventDefault();
 
-			const cy = event.clientY;
+			const coord = splitHorizontal ? event.clientX : event.clientY;
 
 			if (rafId) {
 				return;
@@ -1023,10 +1061,10 @@
 				if (!active) {
 					return;
 				}
-				const dy = cy - active.startY;
-				const totalH = active.startResultsH + active.startPreviewH;
-				const newResultsH = Math.max(80, Math.min(totalH - 80, active.startResultsH + dy));
-				const ratio = newResultsH / totalH;
+				const delta = coord - active.start;
+				const total = active.startResults + active.startPreview;
+				const newResults = Math.max(80, Math.min(total - 80, active.startResults + delta));
+				const ratio = newResults / total;
 				applySplitRatio(ratio);
 			});
 		});
@@ -1054,11 +1092,15 @@
 	regexToggle.setAttribute('aria-label', regexToggle.title);
 	filterToggle.title = isMac ? 'Filter Files (⌥⌘F)' : 'Filter Files (Ctrl+Alt+F)';
 	filterToggle.setAttribute('aria-label', filterToggle.title);
+	splitToggle.title = isMac ? 'Split Orientation (⌥⌘V)' : 'Split Orientation (Ctrl+Alt+V)';
+	splitToggle.setAttribute('aria-label', splitToggle.title);
 
 	syncCaseToggle();
 	syncWordToggle();
 	syncRegexToggle();
 	updateFilterToggle();
+	syncSplitToggle();
+	applyLayout();
 	queryInput.focus();
 	queryInput.select();
 	renderAll();

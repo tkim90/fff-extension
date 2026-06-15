@@ -41,6 +41,10 @@
       {
         "command": "fast-fuzzy-finder.toggleFilter",
         "title": "Fast Fuzzy Finder: Toggle Filter"
+      },
+      {
+        "command": "fast-fuzzy-finder.toggleSplitOrientation",
+        "title": "Fast Fuzzy Finder: Toggle Split Orientation"
       }
     ],
     "keybindings": [
@@ -68,6 +72,11 @@
         "command": "fast-fuzzy-finder.toggleFilter",
         "key": "ctrl+alt+f",
         "mac": "alt+cmd+f"
+      },
+      {
+        "command": "fast-fuzzy-finder.toggleSplitOrientation",
+        "key": "ctrl+alt+v",
+        "mac": "alt+cmd+v"
       }
     ],
     "configuration": {
